@@ -1,0 +1,1 @@
+<a href=<?php echo 'data:application/pdf;base64,'.$data ?> target="_blank" id="descarga-pdf-btn" class="btn btn-success btn-block m-t-2" download="<?php echo $nombrepdffinal.'.pdf'; ?>">TÉLÉCHARGER DOCUMENT</a>

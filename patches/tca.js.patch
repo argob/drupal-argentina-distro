@@ -1,0 +1,21 @@
+diff -ruN a/tca_node/tca_node.module b/tca_node/tca_node.module
+index 8c99e3b..49bc85c 100644
+--- a/tca_node/tca_node.module
++++ b/tca_node/tca_node.module
+@@ -100,9 +100,11 @@ 
+
+function tca_node_node_view($node, $view_mode, $langcode) {
+ function tca_node_ctools_render_alter($info, $page, $context) {
+   if ($page) {
+     if (isset($context['handler']) && $context['handler']->task == 'node_view') {
+-      $node = $context['contexts'][$context['handler']->conf['context']]->data;
+-      if (node_is_page($node) && !user_access('bypass tca_node')) {
+-        tca_execute('node', $node);
++      if(isset($context['handler']->conf['context'])){
++        $node = $context['contexts'][$context['handler']->conf['context']]->data;
++        if (node_is_page($node) && !user_access('bypass tca_node')) {
++          tca_execute('node', $node);
++        }
+       }
+     }
+   }

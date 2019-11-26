@@ -1,0 +1,90 @@
+<?php
+/**
+ * @file
+ * Code for the Bloques: Votación feature.
+ */
+
+include_once 'argentinagobar_bloques_votacion.features.inc';
+
+
+/**
+ * Implements hook_rate_templates().
+ */
+function argentinagobar_bloques_votacion_rate_templates() {
+	$templates = array();
+	$templates['caritas'] = new stdClass();
+  $templates['caritas']->value_type = 'option';
+  $templates['caritas']->theme = 'argentinagobar_bloques_votacion_caritas';
+  $templates['caritas']->css = drupal_get_path('module', 'argentinagobar_bloques_votacion') . '/templates/caritas/caritas.css';
+  $templates['caritas']->js = drupal_get_path('module', 'argentinagobar_bloques_votacion') . '/templates/caritas/caritas.js';
+  $templates['caritas']->options = array(
+    array(1, '1'),
+    array(2, '2'),
+    array(3, '3'),
+    array(4, '4'),
+    array(5, '5'),
+  );
+  $templates['caritas']->customizable = FALSE;
+  $templates['caritas']->translate = TRUE;
+  $templates['caritas']->template_title = t('Caritas');
+	
+	return $templates;
+}
+
+/**
+ * Preprocess function for the caritas template.
+ */
+function argentinagobar_bloques_votacion_preprocess_argentinagobar_bloques_votacion_caritas(&$variables) {
+  variable_set('votingapi_anonymous_window', 10);
+	extract($variables);
+  $stars = array();
+  $caritas = array();
+  $classes = array(
+  	'fa fa-star',
+  	'fa fa-star',
+  	'fa fa-star',
+  	'fa fa-star',
+  	'fa fa-star'
+  );
+
+    foreach ($links as $key => $link) {
+
+  	$caritas[] = theme(
+  		'argentinagobar_bloques_votacion_link',
+			array(
+  			'text' => $link['text'],
+  			'class' =>  (isset($link['class'])) ? $link['class'] . $classes[$key] : $classes[$key],
+  			'href' => $link['href']
+			)
+  	);
+
+    
+  }
+  $variables['caritas'] = $caritas;
+  $info = array();
+  $info['title'] = $variables['display_options']['title'];
+  if ($mode == RATE_CLOSED) {
+    $info[] = t('Voting is closed.');
+  }
+  if (isset($results['user_vote'])) {
+    $vote = $results['user_vote'];
+    $info['user_vote'] = t('!vote', array('!vote' => $vote));
+  }
+  $info['total'] = $results['count'];
+  $variables['info'] = $info;
+}
+
+function argentinagobar_bloques_votacion_theme($existing, $type, $theme, $path) {
+  return array(
+    'argentinagobar_bloques_votacion_caritas' => array(
+    	'variables' => array('links' => NULL, 'results' => NULL, 'mode' => NULL, 'just_voted' => FALSE, 'content_type' => NULL, 'content_id' => NULL, 'display_options' => NULL),
+      'path' => drupal_get_path('module', 'argentinagobar_bloques_votacion') . '/templates/caritas',
+      'template' => 'argentinagobar_bloques_votacion_caritas'
+    ),
+    'argentinagobar_bloques_votacion_link' => array(
+      'variables' => array('text' => NULL, 'href' => NULL, 'class' => NULL),
+      'path' => drupal_get_path('module', 'argentinagobar_bloques_votacion'),
+      'template' => 'argentinagobar_bloques_votacion_link'
+    ),
+  );
+}

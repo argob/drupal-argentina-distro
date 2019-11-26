@@ -1,0 +1,7 @@
+name = Devel tools
+description = El modulo agrega la version del tag
+core = 7.x
+version = "7.x-1.0"
+core = "7.x"
+project = "argentinagobar_devel"
+datestamp = "1454069341"

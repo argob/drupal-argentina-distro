@@ -1,0 +1,23 @@
+<?php
+/**
+ * @file
+ * Code for the Páginas feature.
+ */
+
+include_once 'argentinagobar_paginas.features.inc';
+
+function argentinagobar_paginas_form_page_node_form_alter(&$form, &$form_state, $form_id){
+  $form['options']['status']['#default_value'] = empty($form['nid']['#value']) ? 0 : $form['options']['status']['#default_value'];
+
+  drupal_add_js(drupal_get_path('module', 'argentinagobar_paginas') . '/js/div.js');
+
+}
+
+function argentinagobar_paginas_url_inbound_alter(&$path, $original_path, $path_language) {
+
+  $url = explode('/', $original_path);
+
+  if($key = array_search('noticias' , $url) && $source = drupal_lookup_path('source', $url[0], $path_language = NULL)){
+    $path = $source . '/noticias';
+  }
+}

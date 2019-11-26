@@ -1,0 +1,35 @@
+name = Argentina
+description = Theme de Drupar para el sitio argentina.gob.ar basado en Poncho.
+core = 7.x
+base theme = poncho
+plugins[panels][layouts] = layouts
+
+
+;;;;;;;;;;;;;;;;;;;;;
+;; Regions
+;;;;;;;;;;;;;;;;;;;;;
+
+regions[navigation]     = 'Navigation'
+regions[header]         = 'Top Bar'
+regions[header_left]    = 'Header left'
+regions[header_right]   = 'Header right'
+regions[highlighted]    = 'Highlighted'
+regions[help]           = 'Help'
+regions[content]        = 'Content'
+regions[sidebar_first]  = 'Primary'
+regions[sidebar_second] = 'Secondary'
+regions[footer]         = 'Footer'
+regions[footer1]        = 'Footer 1'
+regions[footer2]        = 'Footer 2'
+regions[footer3]        = 'Footer 3'
+regions[footer4]        = 'Footer 4'
+regions[page_top]       = 'Page top'
+regions[page_bottom]    = 'Page bottom'
+
+
+;;;;;;;;;;;;;;;;;;;;;
+;; Stylesheets
+;;;;;;;;;;;;;;;;;;;;;
+
+; Disable BootstrapCDN if using Bootstrap source files in your sub-theme.
+; settings[bootstrap_cdn] = 0

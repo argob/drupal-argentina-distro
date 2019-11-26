@@ -1,0 +1,12 @@
+name = Migración de trámites
+description = Importa los trámites antiguos
+core = 7.x
+package = Migration
+version = 7.x-2.8
+project = argentinagobar_migtram
+dependencies[] = features
+dependencies[] = migrate
+dependencies[] = migrate_ui
+dependencies[] = options
+datestamp = 1435760949
+files[] = argentinagobar_migtram.migrate.inc

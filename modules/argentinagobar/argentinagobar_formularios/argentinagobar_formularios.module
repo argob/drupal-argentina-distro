@@ -1,0 +1,17 @@
+<?php
+
+include_once 'includes/argentinagobar_formularios.fapi_validation.inc';
+include_once 'includes/argentinagobar_formularios.theme.inc';
+include_once 'includes/argentinagobar_formularios.block.inc';
+include_once 'includes/argentinagobar_formularios.admin.inc';
+include_once 'includes/argentinagobar_formularios.menu.inc';
+include_once 'includes/argentinagobar_formularios.permission.inc';
+include_once 'includes/argentinagobar_formularios.helpers.inc';
+include_once 'includes/argentinagobar_formularios.form.inc';
+include_once 'includes/argentinagobar_formularios.cron.inc';
+
+// function argentinagobar_formularios_date_popup_process_alter(&$element, &$form_state, $context) {
+//   if ($element['#name'] == 'fecha_nacimiento'){
+//   	$element['date']['#description'] = '<p>';
+//   }
+// }

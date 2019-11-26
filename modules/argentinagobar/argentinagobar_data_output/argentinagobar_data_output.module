@@ -1,0 +1,134 @@
+<?php
+/**
+ * @file
+ * Code for the argentinagobar Data Output feature.
+ */
+
+//include_once 'argentinagobar_data_output.features.inc';
+
+function getImages($img){
+	$images = array();
+	foreach ($img as $key => $image) {
+		$uri = $image['raw']['uri'];
+		$images[] = file_create_url($uri);
+	}
+	return $images;
+}
+function argentinagobar_data_output_menu(){
+	$items['output/tramites/%'] = array(
+		'title' => t('Output de Tramites'),
+		'type' => MENU_CALLBACK,
+		'page callback' => 'argentinagobar_data_view',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+	);
+
+	$items['output/noticias/%'] = array(
+		'title' => t('Output de Noticias'),
+		'type' => MENU_CALLBACK,
+		'page callback' => 'argentinagobar_data_view',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+	);
+
+	$items['output/tramite/%'] = array(
+		'title' => t('Output de Tramites'),
+		'type' => MENU_CALLBACK,
+		'page callback' => 'argentinagobar_node',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+	);
+
+	$items['output/noticia/%'] = array(
+		'title' => t('Output de Noticias'),
+		'type' => MENU_CALLBACK,
+		'page callback' => 'argentinagobar_node',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+	);
+
+
+	$items['admin/config/services/rss-areas'] = array(
+    'title' => 'RSS de áreas',
+    'description' => 'Determinar que áreas tendrán feed de RSS',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('argentinagobar_data_output_form'),
+    'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+    );
+	return $items;
+}
+
+function generarAlias($nodo){
+	$options = array('absolute' => FALSE);
+	$url = url('node/' . $nodo->nid, $options);
+	return $url;
+}
+
+function argentinagobar_node($posts){
+	
+	if(arg(0) == 'output'){
+		$nodo = node_load(arg(2));
+		if(!empty($nodo)){
+			$view = views_get_view('listado_de_contenido');
+			$output = array();
+			$output['title']=$nodo->title;
+			$output['id']=$nodo->nid;
+			$output['language']=$nodo->language;
+			$output['body']=field_get_items('node', $nodo, 'body', $langcode = NULL)[0]['value'];
+			$output['actions']=field_get_items('node', $nodo, field_migtram_acciones, $langcode= NULL)[0]['value'];
+			$output['assistances']=field_get_items('node', $nodo, field_migtram_asistencias,$langcode = NULL)[0]['value'];
+			$output['how_to']=field_get_items('node', $nodo, field_migtram_comosehace,$langcode = NULL)[0]['value'];
+			$output['costs']=field_get_items('node',$nodo, field_migtram_costo, $langcode = NULL)[0]['value'];
+			$output['when']=field_get_items('node',$nodo,field_migtram_cuando, $langcode = NULL)[0]['value'];
+			$output['where']=field_get_items('node', $nodo, field_migtram_donde, $langcode = NULL) [0]['value'];
+			$output['observations']=field_get_items('node', $nodo, field_migtram_observaciones, $langcode = NULL)[0]['value'];
+			$output['who']=field_get_items('node',$nodo,field_migtram_quienpuede, $langcode = NULL)[0]['value'];
+			$output['requirements']=field_get_items('node', $nodo, field_migtram_requisitos, $langcode = NULL)[0]['value'];
+			$output['delivery_time']=field_get_items('node',$nodo,field_migtram_tiempo_de_entrega, $langcode = NULL)[0]['value'];
+			$output['validity']=field_get_items('node',$nodo, field_migtram_vigencia, $langcode = NULL)[0]['value'];
+			$output['topics']=$nodo->field_migtram_tema;
+			$output['alias'] = generarAlias($nodo);
+			drupal_json_output($output);
+			drupal_exit();
+		} else {
+			drupal_not_found();
+			drupal_exit();
+		}
+	}
+};
+
+function argentinagobar_data_view($posts){
+
+	if(arg(0) == 'output'){
+		$view = views_get_view('listado_de_contenido');
+		$typeContent = arg(1);
+		switch ($typeContent) {
+			case 'tramites':
+				$output = array();
+				$view->set_display('listado_de_contenido_tramites');
+				break;
+			case 'noticias':
+				$output = array();
+				$view->set_display('listado_de_contenido_noticias');
+				break;
+			default:
+				$view->set_display('listado_de_contenido');
+			break;
+		}
+		$view->set_items_per_page($posts);
+		$view->pre_execute();
+		$view->execute();
+
+		foreach($view->result as $k => $nodo) {
+			$output[$k]['id'] = isset($nodo->nid) ? $nodo->nid : NULL;
+			$output[$k]['title'] = isset($nodo->node_title) ? $nodo->node_title : NULL;
+			$output[$k]['images'] = $nodo->field_field_featured_image ? getImages($nodo->field_field_featured_image): NULL  ;
+			$output[$k]['body'] = isset($nodo->field_body) ? drupal_html_to_text($nodo->field_body[0]['rendered']['#markup']) : NULL;
+			$output[$k]['date'] = isset($nodo->node_created) ? date('d'."-".'m'."-".'Y',$nodo->node_created): NULL;
+		 	$output[$k]['alias'] = generarAlias($nodo);
+ 			}
+		drupal_json_output($output);
+		drupal_exit();
+	}
+}

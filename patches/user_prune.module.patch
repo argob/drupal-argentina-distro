@@ -1,0 +1,733 @@
+diff --git a/user_prune.module b/user_prune.module
+index d879096..b69d8d3 100755
+--- a/user_prune.module
++++ b/user_prune.module
+@@ -33,40 +33,40 @@ function user_prune_form($form, &$form_state) {
+   if ($preview == 0) {
+     $values['user_prune_user_status'] = variable_get('user_prune_user_status', 'all');
+     $values['user_prune_cron_checkbox'] = variable_get('user_prune_cron_checkbox', 0);
+-    $values['user_prune_user_roles_checkbox'] = variable_get('user_prune_user_roles_checkbox', array());
+-    $values['user_prune_no_comment'] = variable_get('user_prune_no_comment', 0);
+-    $values['user_prune_no_node'] = variable_get('user_prune_no_node', 0);
+-    $values['user_prune_no_subscriptions'] = variable_get('user_prune_no_subscriptions', 0);
+-    $values['user_prune_no_og'] = variable_get('user_prune_no_og', 0);
+-    $values['user_prune_no_entityform'] = variable_get('user_prune_no_entityform', 0);
+-    $values['user_prune_no_tmgmt'] = variable_get('user_prune_no_tmgmt', 0);
++    //$values['user_prune_user_roles_checkbox'] = variable_get('user_prune_user_roles_checkbox', array());
++    //$values['user_prune_no_comment'] = variable_get('user_prune_no_comment', 0);
++    //$values['user_prune_no_node'] = variable_get('user_prune_no_node', 0);
++    //$values['user_prune_no_subscriptions'] = variable_get('user_prune_no_subscriptions', 0);
++    //$values['user_prune_no_og'] = variable_get('user_prune_no_og', 0);
++    //$values['user_prune_no_entityform'] = variable_get('user_prune_no_entityform', 0);
++    //$values['user_prune_no_tmgmt'] = variable_get('user_prune_no_tmgmt', 0);
+     $values['user_prune_prune_per_run'] = variable_get('user_prune_prune_per_run', 10);
+     $values['user_prune_time_year'] = variable_get('user_prune_time_year', 0);
+     $values['user_prune_time_month'] = variable_get('user_prune_time_month', 0);
+-    $values['user_prune_time_day'] = variable_get('user_prune_time_day', 0);
+-    $values['user_prune_time_hour'] = variable_get('user_prune_time_hour', 0);
+-    $values['user_prune_time_minute'] = variable_get('user_prune_time_minute', 0);
++    //$values['user_prune_time_day'] = variable_get('user_prune_time_day', 0);
++    //$values['user_prune_time_hour'] = variable_get('user_prune_time_hour', 0);
++    //$values['user_prune_time_minute'] = variable_get('user_prune_time_minute', 0);
+     $values['user_prune_never_logged_in'] = variable_get('user_prune_never_logged_in', 0);
+-    $values['user_prune_cancel_method'] = variable_get('user_prune_cancel_method', 'user_cancel_reassign');
++    $values['user_prune_cancel_method'] = variable_get('user_prune_cancel_method','user_cancel_block');
+   }
+   else {
+     $values['user_prune_user_status'] = variable_get('user_prune_user_status_preview', 'all');
+     $values['user_prune_cron_checkbox'] = variable_get('user_prune_cron_checkbox_preview', 0);
+-    $values['user_prune_user_roles_checkbox'] = variable_get('user_prune_user_roles_checkbox_preview', array());
+-    $values['user_prune_no_comment'] = variable_get('user_prune_no_comment_preview', 0);
+-    $values['user_prune_no_node'] = variable_get('user_prune_no_node_preview', 0);
+-    $values['user_prune_no_subscriptions'] = variable_get('user_prune_no_subscriptions_preview', 0);
+-    $values['user_prune_no_og'] = variable_get('user_prune_no_og_preview', 0);
+-    $values['user_prune_no_entityform'] = variable_get('user_prune_no_entityform_preview', 0);
+-    $values['user_prune_no_tmgmt'] = variable_get('user_prune_no_tmgmt_preview', 0);
++    //$values['user_prune_user_roles_checkbox'] = variable_get('user_prune_user_roles_checkbox_preview', array());
++    //$values['user_prune_no_comment'] = variable_get('user_prune_no_comment_preview', 0);
++    //$values['user_prune_no_node'] = variable_get('user_prune_no_node_preview', 0);
++    //$values['user_prune_no_subscriptions'] = variable_get('user_prune_no_subscriptions_preview', 0);
++    //$values['user_prune_no_og'] = variable_get('user_prune_no_og_preview', 0);
++    //$values['user_prune_no_entityform'] = variable_get('user_prune_no_entityform_preview', 0);
++    // $values['user_prune_no_tmgmt'] = variable_get('user_prune_no_tmgmt_preview', 0);
+     $values['user_prune_prune_per_run'] = variable_get('user_prune_prune_per_run_preview', 25);
+     $values['user_prune_time_year'] = variable_get('user_prune_time_year_preview', 0);
+     $values['user_prune_time_month'] = variable_get('user_prune_time_month_preview', 0);
+-    $values['user_prune_time_day'] = variable_get('user_prune_time_day_preview', 0);
+-    $values['user_prune_time_hour'] = variable_get('user_prune_time_hour_preview', 0);
+-    $values['user_prune_time_minute'] = variable_get('user_prune_time_minute_preview', 0);
++    //$values['user_prune_time_day'] = variable_get('user_prune_time_day_preview', 0);
++    //$values['user_prune_time_hour'] = variable_get('user_prune_time_hour_preview', 0);
++    //$values['user_prune_time_minute'] = variable_get('user_prune_time_minute_preview', 0);
+     $values['user_prune_never_logged_in'] = variable_get('user_prune_never_logged_in_preview', 0);
+-    $values['user_prune_cancel_method'] = variable_get('user_prune_cancel_method', 'user_cancel_reassign_preview');
++    $values['user_prune_cancel_method'] = variable_get('user_prune_cancel_method','user_cancel_block_preview');
+   }
+   variable_del('preview_form_values');
+
+@@ -121,84 +121,85 @@ function user_prune_form($form, &$form_state) {
+       31556916  => t('12 Months'),
+     ),
+   );
+-  $form['time_day'] = array(
+-    '#type' => 'value',
+-    '#value' => array(
+-      0        => t('0 Days'),
+-      86400    => t('1 Day'),
+-      172800   => t('2 Days'),
+-      259200   => t('3 Days'),
+-      345600   => t('4 Days'),
+-      432000   => t('5 Days'),
+-      518400   => t('6 Days'),
+-      604800   => t('7 Days'),
+-      691200   => t('8 Days'),
+-      777600   => t('9 Days'),
+-      864000   => t('10 Days'),
+-      950400   => t('11 Days'),
+-      1036800  => t('12 Days'),
+-      1123200  => t('13 Days'),
+-      1209600  => t('14 Days'),
+-      1296000  => t('15 Days'),
+-      1382400  => t('16 Days'),
+-      1468800  => t('17 Days'),
+-      1555200  => t('18 Days'),
+-      1641600  => t('19 Days'),
+-      1728000  => t('20 Days'),
+-      1814400  => t('21 Days'),
+-      1900800  => t('22 Days'),
+-      1987200  => t('23 Days'),
+-      2073600  => t('24 Days'),
+-      2160000  => t('25 Days'),
+-      2246400  => t('26 Days'),
+-      2332800  => t('27 Days'),
+-      2419200  => t('28 Days'),
+-      2505600  => t('29 Days'),
+-      2592000  => t('30 Days'),
+-      2678400  => t('31 Days'),
+-    ),
+-  );
+-  $form['time_hour'] = array(
+-    '#type' => 'value',
+-    '#value' => array(
+-      0        => t('0 Hours'),
+-      3600     => t('1 Hour'),
+-      7200     => t('2 Hours'),
+-      10800     => t('3 Hours'),
+-      14400     => t('4 Hours'),
+-      18000     => t('5 Hours'),
+-      21600     => t('6 Hours'),
+-      25200     => t('7 Hours'),
+-      28800     => t('8 Hours'),
+-      32400     => t('9 Hours'),
+-      36000     => t('10 Hours'),
+-      39600     => t('11 Hours'),
+-      43200     => t('12 Hours'),
+-      46800     => t('13 Hours'),
+-      50400     => t('14 Hours'),
+-      54000     => t('15 Hours'),
+-      57600     => t('16 Hours'),
+-      61200     => t('17 Hours'),
+-      64800     => t('18 Hours'),
+-      68400     => t('19 Hours'),
+-      72000     => t('20 Hours'),
+-      75600     => t('21 Hours'),
+-      79200     => t('22 Hours'),
+-      82800     => t('23 Hours'),
+-    ),
+-  );
+-  $form['time_minute'] = array(
+-    '#type' => 'value',
+-    '#value' => array(
+-      0        => t('0 Min'),
+-      900      => t('15 Min'),
+-      1800     => t('30 Min'),
+-      2700     => t('45 Min'),
+-    ),
+-  );
++  // $form['time_day'] = array(
++  //   '#type' => 'value',
++  //   '#value' => array(
++  //     0        => t('0 Days'),
++  //     86400    => t('1 Day'),
++  //     172800   => t('2 Days'),
++  //     259200   => t('3 Days'),
++  //     345600   => t('4 Days'),
++  //     432000   => t('5 Days'),
++  //     518400   => t('6 Days'),
++  //     604800   => t('7 Days'),
++  //     691200   => t('8 Days'),
++  //     777600   => t('9 Days'),
++  //     864000   => t('10 Days'),
++  //     950400   => t('11 Days'),
++  //     1036800  => t('12 Days'),
++  //     1123200  => t('13 Days'),
++  //     1209600  => t('14 Days'),
++  //     1296000  => t('15 Days'),
++  //     1382400  => t('16 Days'),
++  //     1468800  => t('17 Days'),
++  //     1555200  => t('18 Days'),
++  //     1641600  => t('19 Days'),
++  //     1728000  => t('20 Days'),
++  //     1814400  => t('21 Days'),
++  //     1900800  => t('22 Days'),
++  //     1987200  => t('23 Days'),
++  //     2073600  => t('24 Days'),
++  //     2160000  => t('25 Days'),
++  //     2246400  => t('26 Days'),
++  //     2332800  => t('27 Days'),
++  //     2419200  => t('28 Days'),
++  //     2505600  => t('29 Days'),
++  //     2592000  => t('30 Days'),
++  //     2678400  => t('31 Days'),
++  //   ),
++  // );
++  // $form['time_hour'] = array(
++  //   '#type' => 'value',
++  //   '#value' => array(
++  //     0        => t('0 Hours'),
++  //     3600     => t('1 Hour'),
++  //     7200     => t('2 Hours'),
++  //     10800     => t('3 Hours'),
++  //     14400     => t('4 Hours'),
++  //     18000     => t('5 Hours'),
++  //     21600     => t('6 Hours'),
++  //     25200     => t('7 Hours'),
++  //     28800     => t('8 Hours'),
++  //     32400     => t('9 Hours'),
++  //     36000     => t('10 Hours'),
++  //     39600     => t('11 Hours'),
++  //     43200     => t('12 Hours'),
++  //     46800     => t('13 Hours'),
++  //     50400     => t('14 Hours'),
++  //     54000     => t('15 Hours'),
++  //     57600     => t('16 Hours'),
++  //     61200     => t('17 Hours'),
++  //     64800     => t('18 Hours'),
++  //     68400     => t('19 Hours'),
++  //     72000     => t('20 Hours'),
++  //     75600     => t('21 Hours'),
++  //     79200     => t('22 Hours'),
++  //     82800     => t('23 Hours'),
++  //   ),
++  // );
++  // $form['time_minute'] = array(
++  //   '#type' => 'value',
++  //   '#value' => array(
++  //     0        => t('0 Min'),
++  //     900      => t('15 Min'),
++  //     1800     => t('30 Min'),
++  //     2700     => t('45 Min'),
++  //   ),
++  // );
+   $form['number_type_options'] = array(
+     '#type' => 'value',
+     '#value' => array(
++       5  => t('5'),
+       10  => t('10'),
+       25  => t('25'),
+       50  => t('50'),
+@@ -232,21 +233,21 @@ function user_prune_form($form, &$form_state) {
+     '#options' => $form['time_month']['#value'],
+     '#default_value' => $values['user_prune_time_month'],
+   );
+-  $form['select_options']['user_prune_time_day'] = array(
+-    '#type' => 'select',
+-    '#options' => $form['time_day']['#value'],
+-    '#default_value' => $values['user_prune_time_day'],
+-  );
+-  $form['select_options']['user_prune_time_hour'] = array(
+-    '#type' => 'select',
+-    '#options' => $form['time_hour']['#value'],
+-    '#default_value' => $values['user_prune_time_hour'],
+-  );
+-  $form['select_options']['user_prune_time_minute'] = array(
+-    '#type' => 'select',
+-    '#options' => $form['time_minute']['#value'],
+-    '#default_value' => $values['user_prune_time_minute'],
+-  );
++  // $form['select_options']['user_prune_time_day'] = array(
++  //   '#type' => 'select',
++  //   '#options' => $form['time_day']['#value'],
++  //   '#default_value' => $values['user_prune_time_day'],
++  // );
++  // $form['select_options']['user_prune_time_hour'] = array(
++  //   '#type' => 'select',
++  //   '#options' => $form['time_hour']['#value'],
++  //   '#default_value' => $values['user_prune_time_hour'],
++  // );
++  // $form['select_options']['user_prune_time_minute'] = array(
++  //   '#type' => 'select',
++  //   '#options' => $form['time_minute']['#value'],
++  //   '#default_value' => $values['user_prune_time_minute'],
++  // );
+
+   // User Status exceptions.
+   $form['select_options']['user_prune_user_status'] = array(
+@@ -266,78 +267,87 @@ function user_prune_form($form, &$form_state) {
+   );
+   $form['select_options']['user_prune_never_logged_in'] = array(
+     '#type' => 'checkbox',
+-    '#title' => t('Delete only users who never logged in.'),
++    '#title' => t('Blocked only users who never logged in.'),
+     '#default_value' => $values['user_prune_never_logged_in'],
+   );
+
+-  // Show all the roles except superuser and anon roles.
+-  $roles = user_roles(FALSE, NULL);
+-  unset($roles[1]);
+-  unset($roles[2]);
+-  $form['select_options']['user_prune_user_roles_checkbox'] = array(
+-    '#type'          => 'checkboxes',
+-    '#title'         => 'Do not delete users with roles:',
+-    '#options'       => $roles,
+-    '#default_value' => $values['user_prune_user_roles_checkbox'],
+-  );
+-
+-  // Existing content settings.
+-  $form['select_options']['content_display_label'] = array(
+-    '#markup' => "<label for='additonal-settings'>" . t('Already Existing User Content') ."</label><br>",
+-  );
+-  $form['select_options']['user_prune_no_comment'] = array(
+-    '#type' => 'checkbox',
+-    '#title' => t('Do not delete users who posted comments.'),
+-    '#default_value' => $values['user_prune_no_comment'],
+-  );
+-  $form['select_options']['user_prune_no_node'] = array(
+-    '#type' => 'checkbox',
+-    '#title' => t('Do not delete users who owning a node.'),
+-    '#default_value' => $values['user_prune_no_node'],
+-  );
++  // // Show all the roles except superuser and anon roles.
++  // $roles = user_roles(FALSE, NULL);
++  // unset($roles[1]);
++  // unset($roles[2]);
++  // $form['select_options']['user_prune_user_roles_checkbox'] = array(
++  //   '#type'          => 'checkboxes',
++  //   '#title'         => 'Do not delete users with roles:',
++  //   '#options'       => $roles,
++  //   '#default_value' => $values['user_prune_user_roles_checkbox'],
++  // );
++
++  // // Existing content settings.
++  // $form['select_options']['content_display_label'] = array(
++  //   '#markup' => "<label for='additonal-settings'>" . t('Already Existing User Content') ."</label><br>",
++  // );
++  // $form['select_options']['user_prune_no_comment'] = array(
++  //   '#type' => 'checkbox',
++  //   '#title' => t('Do not delete users who posted comments.'),
++  //   '#default_value' => $values['user_prune_no_comment'],
++  // );
++  // $form['select_options']['user_prune_no_node'] = array(
++  //   '#type' => 'checkbox',
++  //   '#title' => t('Do not delete users who owning a node.'),
++  //   '#default_value' => $values['user_prune_no_node'],
++  // );
+   // Add subscription option if module exists.
+-  if (module_exists('subscriptions')) {
+-    $form['select_options']['user_prune_no_subscriptions'] = array(
+-      '#type' => 'checkbox',
+-      '#title' => t('Do not delete users who have Subscriptions / Notifications set up.'),
+-      '#default_value' => $values['user_prune_no_subscriptions'],
+-    );
+-  }
++  // if (module_exists('subscriptions')) {
++  //   $form['select_options']['user_prune_no_subscriptions'] = array(
++  //     '#type' => 'checkbox',
++  //     '#title' => t('Do not delete users who have Subscriptions / Notifications set up.'),
++  //     '#default_value' => $values['user_prune_no_subscriptions'],
++  //   );
++  // }
+   // Add groups option if module exists.
+-  if (module_exists('og')) {
+-    $form['select_options']['user_prune_no_og'] = array(
+-      '#type' => 'checkbox',
+-      '#title' => t('Do not delete users who are a part of Organic Groups (OG).'),
+-      '#default_value' => $values['user_prune_no_og'],
+-    );
+-  }
++  // if (module_exists('og')) {
++  //   $form['select_options']['user_prune_no_og'] = array(
++  //     '#type' => 'checkbox',
++  //     '#title' => t('Do not delete users who are a part of Organic Groups (OG).'),
++  //     '#default_value' => $values['user_prune_no_og'],
++  //   );
++  // }
+   // Add entityform option if module exists.
+-  if (module_exists('entityform')) {
+-    $form['select_options']['user_prune_no_entityform'] = array(
+-      '#type' => 'checkbox',
+-      '#title' => t('Do not delete users who have submited an Entityform.'),
+-      '#default_value' => $values['user_prune_no_entityform'],
+-    );
+-  }
+-  // Add tmgmt option if module exists.
+-  if (module_exists('tmgmt')) {
+-    $form['select_options']['user_prune_no_tmgmt'] = array(
+-      '#type' => 'checkbox',
+-      '#title' => t('Do not delete users who have submited a translation job request (TMGMT).'),
+-      '#default_value' => $values['user_prune_no_tmgmt'],
+-    );
+-  }
+-
+-    // User cancel method.
+-  $form['select_options']['user_prune_cancel_method'] = array(
+-    '#type' => 'radios',
+-    '#title' => t('User delete method'),
+-    '#default_value' => $values['user_prune_cancel_method'],
+-    '#options' => array(
+-      'user_cancel_reassign' => t('Delete the account and make its content belong to the %anonymous-name user.'),
+-      'user_cancel_delete' => t('Delete the account and its content.'),
+-    ),
+-  );
++  // if (module_exists('entityform')) {
++  //   $form['select_options']['user_prune_no_entityform'] = array(
++  //     '#type' => 'checkbox',
++  //     '#title' => t('Do not delete users who have submited an Entityform.'),
++  //     '#default_value' => $values['user_prune_no_entityform'],
++  //   );
++  // }
++  // // Add tmgmt option if module exists.
++  // if (module_exists('tmgmt')) {
++  //   $form['select_options']['user_prune_no_tmgmt'] = array(
++  //     '#type' => 'checkbox',
++  //     '#title' => t('Do not delete users who have submited a translation job request (TMGMT).'),
++  //     '#default_value' => $values['user_prune_no_tmgmt'],
++  //   );
++  // }
++
++  //   // User cancel method.
++  // $form['select_options']['user_prune_cancel_method'] = array(
++  //   '#type' => 'radios',
++  //   '#title' => t('User delete method'),
++  //   '#default_value' => $values['user_prune_cancel_method'],
++  //   '#options' => array(
++  //     'user_cancel_reassign' => t('Delete the account and make its content belong to the %anonymous-name user.'),
++  //     'user_cancel_delete' => t('Delete the account and its content.'),
++  //   ),
++  // );
++  // User cancel block method.
++$form['select_options']['user_prune_cancel_method'] = array(
++  '#type' => 'radios',
++  '#title' => t('User blocked method'),
++  '#default_value' => $values['user_prune_cancel_method'],
++  '#options' => array(
++    'user_cancel_block' => t('Disable the account and keep its content.'),
++  ),
++);
+
+   // Cron settings.
+   $form['select_options']['user_prune_prune_per_run'] = array(
+@@ -354,23 +364,23 @@ function user_prune_form($form, &$form_state) {
+     '#submit' => array('user_prune_preview'),
+   );
+
+-  // Prune users right now.
+-  $form['prune_now'] = array(
+-    '#type' => 'fieldset',
+-    '#title' => t('Prune Now'),
+-    '#description' => t('You can use the criteria set above to prune users immediately. Any changes you made to the form will not be saved.'),
+-    '#collapsible' => TRUE,
+-    '#collapsed' => TRUE,
+-  );
+-  $form['prune_now']['go'] = array(
+-    '#type' => 'submit',
+-    '#value' => t('Prune Now'),
+-    '#submit' => array('user_prune_form_submit'),
+-  );
++  // // Prune users right now.
++  // $form['prune_now'] = array(
++  //   '#type' => 'fieldset',
++  //   '#title' => t('Prune Now'),
++  //   '#description' => t('You can use the criteria set above to prune users immediately. Any changes you made to the form will not be saved.'),
++  //   '#collapsible' => TRUE,
++  //   '#collapsed' => TRUE,
++  // );
++  // $form['prune_now']['go'] = array(
++  //   '#type' => 'submit',
++  //   '#value' => t('Prune Now'),
++  //   '#submit' => array('user_prune_form_submit'),
++  // );
+
+   $form['user_prune_cron_checkbox'] = array(
+     '#type' => 'checkbox',
+-    '#title' => t('Prune selected users on every cron run.'),
++    '#title' => t('Blocked selected users on every cron run.'),
+     '#default_value' => $values['user_prune_cron_checkbox'],
+   );
+
+@@ -385,7 +395,7 @@ function user_prune_form($form, &$form_state) {
+  * @param bool $cron
+  *   If it is false it will provide page success/failure feedback.
+  */
+-function user_prune_delete($values, $cron = FALSE) {
++function user_prune_blocked($values, $cron = FALSE) {
+   // Fetch the SQL.
+   $sql = user_prune_build_sql($values);
+
+@@ -404,27 +414,54 @@ function user_prune_delete($values, $cron = FALSE) {
+     $uids = $chunks[0];
+   }
+
+-  // Delete user one by one with the Drupal user cancel method.
++  // // Delete user one by one with the Drupal user cancel method.
++  // foreach ($uids as $uid) {
++  //   // Get the actual user cancel method.
++  //   $method = $values['user_prune_cancel_method'];
++  //
++  //   // Get the user mail status canceled notify.
++  //   $notify = variable_get('user_mail_status_canceled_notify', FALSE);
++  //   $edit = array('user_cancel_notify' => $notify);
++  //
++  //   // Delete account.
++  //   user_cancel($edit, $uid, $method);
++  //   $batch =& batch_get();
++  //   $batch['progressive'] = FALSE;
++  //   batch_process();
++  // }
++  //
++  // if (!$cron) {
++  //   // If cron didn't kick this off add status message to the page.
++  //   $message = t('@count users have been pruned.', array('@count' => count($uids)));
++  //   if (isset($leftover)) {
++  //     $message .= ' ' . t("@leftover users met your criteria but weren't deleted.", array('@leftover' => $leftover));
++  //   }
++  //
++  //   drupal_set_message($message);
++  // }
++
++  // Block user one by one with the Drupal user cancel method.
+   foreach ($uids as $uid) {
+     // Get the actual user cancel method.
+     $method = $values['user_prune_cancel_method'];
+
+-    // Get the user mail status canceled notify.
+-    $notify = variable_get('user_mail_status_canceled_notify', FALSE);
++    // Get the user mail status blocked notify. Default FALSE
++    $notify = variable_get('user_mail_status_blocked_notify', FALSE);
+     $edit = array('user_cancel_notify' => $notify);
+
+-    // Delete account.
+-    user_cancel($edit, $uid, $method);
+-    $batch =& batch_get();
+-    $batch['progressive'] = FALSE;
+-    batch_process();
++     //Block account.
++     user_cancel($edit, $uid, $method);
++     $batch =& batch_get();
++     $batch['progressive'] = FALSE;
++     batch_process();
+   }
++  //var_dump('@count users have been blocked.', array('@count' => count($uids)));
+
+   if (!$cron) {
+     // If cron didn't kick this off add status message to the page.
+-    $message = t('@count users have been pruned.', array('@count' => count($uids)));
++    $message = t('@count users have been blocked.', array('@count' => count($uids)));
+     if (isset($leftover)) {
+-      $message .= ' ' . t("@leftover users met your criteria but weren't deleted.", array('@leftover' => $leftover));
++      $message .= ' ' . t("@leftover users met your criteria but weren't blocked.", array('@leftover' => $leftover));
+     }
+
+     drupal_set_message($message);
+@@ -485,27 +522,27 @@ function user_prune_preview($form, &$form_state) {
+
+   variable_set('user_prune_time_year_preview', $values['user_prune_time_year']);
+   variable_set('user_prune_time_month_preview', $values['user_prune_time_month']);
+-  variable_set('user_prune_time_day_preview', $values['user_prune_time_day']);
+-  variable_set('user_prune_time_hour_preview', $values['user_prune_time_hour']);
+-  variable_set('user_prune_time_minute_preview', $values['user_prune_time_minute']);
++  //variable_set('user_prune_time_day_preview', $values['user_prune_time_day']);
++  //variable_set('user_prune_time_hour_preview', $values['user_prune_time_hour']);
++  // variable_set('user_prune_time_minute_preview', $values['user_prune_time_minute']);
+   variable_set('user_prune_user_status_preview', $values['user_prune_user_status']);
+   variable_set('user_prune_cron_checkbox_preview', $values['user_prune_cron_checkbox']);
+-  variable_set('user_prune_user_roles_checkbox_preview', $values['user_prune_user_roles_checkbox']);
+-  variable_set('user_prune_no_comment_preview', $values['user_prune_no_comment']);
+-  variable_set('user_prune_no_node_preview', $values['user_prune_no_node']);
+-  variable_set('user_prune_cancel_method', $values['user_prune_cancel_method']);
+-  if (module_exists('subscriptions')) {
+-    variable_set('user_prune_no_subscriptions_preview', $values['user_prune_no_subscriptions']);
+-  }
+-  if (module_exists('og')) {
+-    variable_set('user_prune_no_og_preview', $values['user_prune_no_og']);
+-  }
+-  if (module_exists('entityform')) {
+-    variable_set('user_prune_no_entityform_preview', $values['user_prune_no_entityform']);
+-  }
+-  if (module_exists('tmgmt')) {
+-    variable_set('user_prune_no_tmgmt_preview', $values['user_prune_no_tmgmt']);
+-  }
++  //variable_set('user_prune_user_roles_checkbox_preview', $values['user_prune_user_roles_checkbox']);
++  //variable_set('user_prune_no_comment_preview', $values['user_prune_no_comment']);
++  //variable_set('user_prune_no_node_preview', $values['user_prune_no_node']);
++  // variable_set('user_prune_cancel_method', $values['user_prune_cancel_method']);
++  // if (module_exists('subscriptions')) {
++  //   variable_set('user_prune_no_subscriptions_preview', $values['user_prune_no_subscriptions']);
++  // }
++  // if (module_exists('og')) {
++  //   variable_set('user_prune_no_og_preview', $values['user_prune_no_og']);
++  // }
++  // if (module_exists('entityform')) {
++  //   variable_set('user_prune_no_entityform_preview', $values['user_prune_no_entityform']);
++  // }
++  // if (module_exists('tmgmt')) {
++  //   variable_set('user_prune_no_tmgmt_preview', $values['user_prune_no_tmgmt']);
++  // }
+   variable_set('user_prune_prune_per_run_preview', $values['user_prune_prune_per_run']);
+   variable_set('user_prune_never_logged_in_preview', $values['user_prune_never_logged_in']);
+ }
+@@ -521,7 +558,8 @@ function user_prune_preview($form, &$form_state) {
+  */
+ function user_prune_build_sql($values) {
+   // Filter on user created time.
+-  $logged_in_limit = time() - $values['user_prune_time_year'] - $values['user_prune_time_month'] - $values['user_prune_time_day'] - $values['user_prune_time_hour'] - $values['user_prune_time_minute'];
++  //$logged_in_limit = time() - $values['user_prune_time_year'] - $values['user_prune_time_month'] - $values['user_prune_time_day'] - $values['user_prune_time_hour'] - $values['user_prune_time_minute'];
++  $logged_in_limit = time() - $values['user_prune_time_year'] - $values['user_prune_time_month'];
+   $sql = 'SELECT u.uid AS uid, name AS Name, created AS Created, access AS Lastaccess, login AS Lastlogin, status AS Status FROM {users} u WHERE created < ' . $logged_in_limit;
+
+   // Option to filter only never logged in users.
+@@ -547,53 +585,53 @@ function user_prune_build_sql($values) {
+   // Make sure not to include power users.
+   $sql .= ' AND uid <> 0 AND uid <> 1';
+
+-  // Filter based on user roles.
+-  $selected_roles = array_filter($values['user_prune_user_roles_checkbox']);
+-  foreach ($selected_roles as $rid) {
+-    $sql .= ' AND u.uid NOT IN (SELECT r.uid FROM {users_roles} r WHERE rid = ' . $rid . ')';
+-  }
+-
+-  // Filter on out users who have added a comment.
+-  if ($values['user_prune_no_comment'] == 1) {
+-    $sql .= ' AND u.uid NOT IN (SELECT c.uid FROM {comment} c)';
+-  }
+-
+-  // Filter out users who have created a node.
+-  if ($values['user_prune_no_node'] == 1) {
+-    $sql .= ' AND u.uid NOT IN (SELECT d.uid FROM {node} d)';
+-  }
+-
+-  // Add subscription query if module exists.
+-  if (module_exists('subscriptions')) {
+-    // Filter out users who have a subscription.
+-    if ($values['user_prune_no_subscriptions'] == 1) {
+-      $sql .= ' AND u.uid NOT IN (SELECT s.recipient_uid FROM {subscriptions} s)';
+-    }
+-  }
+-
+-  // Add groups query if module exists.
+-  if (module_exists('og')) {
+-    // Filter out users who have a og.
+-    if ($values['user_prune_no_og'] == 1) {
+-      $sql .= ' AND u.uid NOT IN (SELECT ogm.etid FROM {og_membership} ogm)';
+-    }
+-  }
+-
+-  // Add entityform query if module exists.
+-  if (module_exists('entityform')) {
+-    // Filter out users who have a entityform.
+-    if ($values['user_prune_no_entityform'] == 1) {
+-      $sql .= ' AND u.uid NOT IN (SELECT ef.uid FROM {entityform} ef)';
+-    }
+-  }
+-
+-  // Add tmgmt query if module exists.
+-  if (module_exists('tmgmt')) {
+-    // Filter out users who have a tmgmt.
+-    if ($values['user_prune_no_tmgmt'] == 1) {
+-      $sql .= ' AND u.uid NOT IN (SELECT tj.uid FROM {tmgmt_job} tj)';
+-    }
+-  }
++  // // Filter based on user roles.
++  // $selected_roles = array_filter($values['user_prune_user_roles_checkbox']);
++  // foreach ($selected_roles as $rid) {
++  //   $sql .= ' AND u.uid NOT IN (SELECT r.uid FROM {users_roles} r WHERE rid = ' . $rid . ')';
++  // }
++
++  // // Filter on out users who have added a comment.
++  // if ($values['user_prune_no_comment'] == 1) {
++  //   $sql .= ' AND u.uid NOT IN (SELECT c.uid FROM {comment} c)';
++  // }
++
++  // // Filter out users who have created a node.
++  // if ($values['user_prune_no_node'] == 1) {
++  //   $sql .= ' AND u.uid NOT IN (SELECT d.uid FROM {node} d)';
++  // }
++
++  // // Add subscription query if module exists.
++  // if (module_exists('subscriptions')) {
++  //   // Filter out users who have a subscription.
++  //   if ($values['user_prune_no_subscriptions'] == 1) {
++  //     $sql .= ' AND u.uid NOT IN (SELECT s.recipient_uid FROM {subscriptions} s)';
++  //   }
++  // }
++
++  // // Add groups query if module exists.
++  // if (module_exists('og')) {
++  //   // Filter out users who have a og.
++  //   if ($values['user_prune_no_og'] == 1) {
++  //     $sql .= ' AND u.uid NOT IN (SELECT ogm.etid FROM {og_membership} ogm)';
++  //   }
++  // }
++
++  // // Add entityform query if module exists.
++  // if (module_exists('entityform')) {
++  //   // Filter out users who have a entityform.
++  //   if ($values['user_prune_no_entityform'] == 1) {
++  //     $sql .= ' AND u.uid NOT IN (SELECT ef.uid FROM {entityform} ef)';
++  //   }
++  // }
++
++  // // Add tmgmt query if module exists.
++  // if (module_exists('tmgmt')) {
++  //   // Filter out users who have a tmgmt.
++  //   if ($values['user_prune_no_tmgmt'] == 1) {
++  //     $sql .= ' AND u.uid NOT IN (SELECT tj.uid FROM {tmgmt_job} tj)';
++  //   }
++  // }
+
+   // Limit batches.
+   $sql .= ' ORDER BY uid limit ' . $values['user_prune_prune_per_run'];
+@@ -608,7 +646,7 @@ function user_prune_form_submit($form, &$form_state) {
+   $values = $form_state['values'];
+
+   // Trim the selected users based on form data.
+-  user_prune_delete($values);
++  user_prune_blocked($values, $cron, FALSE);
+ }
+
+ /**
+@@ -621,21 +659,21 @@ function user_prune_cron() {
+
+     $config['user_prune_time_year'] = variable_get('user_prune_time_year', 0);
+     $config['user_prune_time_month'] = variable_get('user_prune_time_month', 0);
+-    $config['user_prune_time_day'] = variable_get('user_prune_time_day', 0);
+-    $config['user_prune_time_hour'] = variable_get('user_prune_time_hour', 0);
+-    $config['user_prune_time_minute'] = variable_get('user_prune_time_minute', 0);
++    //$config['user_prune_time_day'] = variable_get('user_prune_time_day', 0);
++    //$config['user_prune_time_hour'] = variable_get('user_prune_time_hour', 0);
++    //$config['user_prune_time_minute'] = variable_get('user_prune_time_minute', 0);
+     $config['user_prune_never_logged_in'] = variable_get('user_prune_never_logged_in', 0);
+     $config['user_prune_user_status'] = variable_get('user_prune_user_status', 'all');
+     $config['user_prune_prune_per_run'] = variable_get('user_prune_prune_per_run', '10');
+-    $config['user_prune_user_roles_checkbox'] = variable_get('user_prune_user_roles_checkbox');
+-    $config['user_prune_no_comment'] = variable_get('user_prune_no_comment');
+-    $config['user_prune_no_node'] = variable_get('user_prune_no_node');
+-    $config['user_prune_no_subscriptions'] = variable_get('user_prune_no_subscriptions', 0);
+-    $config['user_prune_no_og'] = variable_get('user_prune_no_og', 0);
+-    $config['user_prune_no_entityform'] = variable_get('user_prune_no_entityform', 0);
+-    $config['user_prune_no_tmgmt'] = variable_get('user_prune_no_tmgmt', 0);
++    //$config['user_prune_user_roles_checkbox'] = variable_get('user_prune_user_roles_checkbox');
++    //$config['user_prune_no_comment'] = variable_get('user_prune_no_comment');
++    //$config['user_prune_no_node'] = variable_get('user_prune_no_node');
++    // $config['user_prune_no_subscriptions'] = variable_get('user_prune_no_subscriptions', 0);
++    //$config['user_prune_no_og'] = variable_get('user_prune_no_og', 0);
++    //$config['user_prune_no_entityform'] = variable_get('user_prune_no_entityform', 0);
++    //$config['user_prune_no_tmgmt'] = variable_get('user_prune_no_tmgmt', 0);
+     $config['user_prune_cancel_method'] = variable_get('user_prune_cancel_method', 0);
+
+-    user_prune_delete($config, TRUE);
++    user_prune_blocked($config, TRUE);
+   }
+ }
+--
+2.17.1

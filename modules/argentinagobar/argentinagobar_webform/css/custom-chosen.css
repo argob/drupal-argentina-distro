@@ -1,0 +1,19 @@
+.argentina-chosen {
+  width: 100%!important;
+}
+.chosen-container.chosen-container-single .chosen-single {
+  margin: -3px 0 0 0!important;
+  border: none!important;
+  box-shadow: none!important;
+}
+
+.chosen-container-single .chosen-drop {
+  left: 1px;
+}
+.chosen-container-active.chosen-with-drop .chosen-single div b {
+  background-position: -16px 8px;
+}
+.chosen-container-single .chosen-single div b {
+  background-position: 0px 8px;
+}
+

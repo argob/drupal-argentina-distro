@@ -1,0 +1,44 @@
+<?php
+
+/**
+ * Implementa hook_form_FORM_ID_alter() para modificar los siguientes formularios:
+ * creacion de usuarios: user_register_form => /admin/people/create
+ * edición de usuarios: user_profile_form => user/%/edit?destination=admin/people
+ * edición miembros: grupos og_ui_edit_membership => admin/people/edit-membership/%?destination=group/node/%/admin/people
+ * agregar miembos: a grupos og_ui_add_users => group/node/%/admin/people/add-user
+ * tipo_node_form: saca opciones de publicacion. sticky y promote en la creación y edición de contenidos.
+ * * los tipos pueden ser: page, book, area, servicio...etc)
+ */
+function argentinagobar_filtra_roles_form_alter(&$form, &$form_state, $form_id){
+
+  if (isset($form['#node']) && $form['#node']->type .'_node_form' === $form_id)
+  {
+      unset($form['options']['promote']);
+      unset($form['options']['sticky']);
+  }
+
+  switch($form_id)
+  {
+    case "user_register_form" :
+      if(isset($form['account']['roles']['#options'])){
+        unset($form['account']['roles']['#options'][38]);
+       }
+    break;
+    case "user_profile_form" :
+      if(isset($form['account']['roles']['#options'])){
+        unset($form['account']['roles']['#options'][38]);
+       }
+    break;
+    case "og_ui_edit_membership" :
+      if(isset($form['og_user']['roles']['#options'])){
+        unset($form['og_user']['roles']['#options'][6]);
+       }
+    break;
+    case "og_ui_add_users" :
+      if(isset($form['og_user']['roles']['#options'])){
+        unset($form['og_user']['roles']['#options'][6]);
+       }
+    break;
+  }
+
+}

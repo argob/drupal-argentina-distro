@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * Cambia la variable de imagen de fondo por backimage_busqueda
+ * para coherencia y nombre de variable seguro
+ */
+function argentinagobar_search_update_7001(&$sandbox = NULL) {
+
+  if(!empty($img = variable_get('backgroundimage',''))){
+
+  	$result = db_select('file_managed', 'fm')
+    ->fields('fm',array('fid'))
+    ->condition('uri', '%public://backgroundimage%','like')
+    ->execute()
+    ->fetchAssoc();
+
+    foreach($result as $value){
+    	file_delete(file_load($value), TRUE);
+    }
+  	
+  	variable_del('backgroundimage');
+
+  }
+
+  return t('Eliminada variable backgroundimage
+  		<li>Eliminados los archivos dependientes de la variable</li>');
+}

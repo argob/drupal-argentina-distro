@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Servicios Vista feature.
+ */
+
+include_once 'ar_servicios_vista.features.inc';

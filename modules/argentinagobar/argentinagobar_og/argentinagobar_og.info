@@ -1,0 +1,7 @@
+name = Grupos
+description = Integra Organic Groups en Argentina.gob.ar
+core = 7.x
+package = Argentina
+version = 7.x-1.0
+dependencies[] = og
+dependencies[] = og_ui

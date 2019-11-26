@@ -1,0 +1,23 @@
+/*section{
+}
+
+
+.jumbotron_body{
+    padding: 20px 0!important;
+}
+
+#messages{
+    margin:0;
+}*/
+
+#argobar-consulta-compre-social p.text-muted{
+    margin-bottom:10px !important;
+}
+
+#argobar-consulta-compre-social hr{
+    display:none;
+}
+
+.form-control.btn {
+    color: #fff !important;
+}

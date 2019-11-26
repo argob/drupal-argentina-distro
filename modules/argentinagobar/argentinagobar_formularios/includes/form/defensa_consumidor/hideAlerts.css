@@ -1,0 +1,6 @@
+/* HIDE ALERTS */
+.alert.messages{display:none;}
+
+#edit-reclamo-esusuario span.form-required{
+	display:none !important;
+}

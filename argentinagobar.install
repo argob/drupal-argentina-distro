@@ -1,0 +1,100 @@
+<?php
+
+/**
+ * Implements hook_install_tasks().
+ *
+ * Allows the profile to alter the site configuration form.
+ */
+
+function argentinagobar_install_tasks(){
+
+  $tasks = array();
+
+  $tasks['enable_argentinagobar_themes'] = array(
+    'display_name' => t('Habilitar themes'),
+    'display' => TRUE,
+    'type' => 'normal',
+  );
+
+  $tasks['enable_pages'] = array(
+    'display_name' => t('Habilitar paneles'),
+    'display' => TRUE,
+    'type' => 'normal',
+  );
+
+  $tasks['revert_features'] = array(
+    'display_name' => t('Revertir Features'),
+    'display' => TRUE,
+    'type' => 'normal',
+  );
+
+  return $tasks;
+}
+
+function enable_argentinagobar_themes(){
+
+  $enable = array(
+    'theme_default' => 'argentinagobar_theme',
+    'admin_theme' => 'adminimal',
+  );
+
+  theme_enable($enable);
+
+  foreach ($enable as $var => $theme) {
+    if (!is_numeric($var)) {
+      variable_set($var, $theme);
+    }
+  }
+
+  theme_disable(array('bartik'));
+}
+
+// Habilita Node Overview de Page Manager Existing Pages
+
+function enable_pages(){
+  $pages = array("pm_existing_pages-node_overview", "node_view", "page-tramites", "page-noticias", "page-areas");
+  foreach ($pages as $item) {
+    $page = page_manager_get_page_cache($item);
+    $function = ctools_plugin_get_function($page->subtask, "enable callback"); 
+    $function($page, FALSE); 
+    menu_rebuild();
+  }
+}
+
+function revert_features(){
+  features_revert(
+    array(
+      'argentinagobar_cck' => array(
+        'fe_block_settings'
+      )
+    )
+  );
+}
+
+function argentinagobar_install() {
+  // Create a default role for site administrators, with all available permissions assigned.
+  $admin_role = new stdClass();
+  $admin_role->name = 'administrator';
+  $admin_role->weight = 2;
+  user_role_save($admin_role);
+  user_role_grant_permissions($admin_role->rid, array_keys(module_invoke_all('permission')));
+  // Set this as the administrator role.
+  variable_set('user_admin_role', $admin_role->rid);
+
+  // Assign user 1 the "administrator" role.
+  db_insert('users_roles')
+    ->fields(array('uid' => 1, 'rid' => $admin_role->rid))
+    ->execute();
+}
+/**
+ * Define todas las áreas como Grupo
+ */
+function argentinagobar_update_7001(&$sandbox) {
+  db_update('field_data_group_group')
+  ->fields(
+    array(
+      'group_group_value' => 1,
+    )
+  )
+  ->execute();
+}

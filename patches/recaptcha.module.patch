@@ -1,0 +1,14 @@
+diff --git a/recaptcha.module b/recaptcha.module
+index 3725d92..4f8bffc 100644
+--- a/recaptcha.module
++++ b/recaptcha.module
+@@ -90,6 +90,7 @@ function recaptcha_captcha($op, $captcha_type = '') {
+           $captcha['form']['captcha_response'] = array(
+             '#type' => 'hidden',
+             '#value' => 'Google no captcha',
++            '#cache' => ['max-age' => 0],
+           );
+
+           // As the validate callback does not depend on sid or solution, this
+--
+2.17.1

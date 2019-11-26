@@ -1,0 +1,9 @@
+{
+    "metadata": {
+        "resultset": {
+            "count": 4142,
+            "offset": 0,
+            "limit": 5000
+        }
+    },
+"results":[{"categoria":"Localidad simple","centroide":{"lat":-54.637686082869,"lon":-67.766940855265},"departamento":{"id":"94015","nombre":"Ushuaia"},"id":"94015010000","localidad_censal":{"id":"94015010","nombre":"Laguna Escondida"},"municipio":{"id":null,"nombre":null},"nombre":"LAGUNA ESCONDIDA","provincia":{"id":"94","nombre":"Tierra del Fuego, Ant\u00e1rtida e Islas del Atl\u00e1ntico Sur"}},{"categoria":"Localidad simple","centroide":{"lat":-53.787047344916,"lon":-67.713235071805},"departamento":{"id":"94008","nombre":"R\u00edo Grande"},"id":"94008010000","localidad_censal":{"id":"94008010","nombre":"R\u00edo Grande"},"municipio":{"id":"940007","nombre":"R\u00edo Grande"},"nombre":"RIO GRANDE","provincia":{"id":"94","nombre":"Tierra del Fuego, Ant\u00e1rtida e Islas del Atl\u00e1ntico Sur"}},{"categoria":"Localidad simple","centroide":{"lat":-54.511386754673,"lon":-67.195804463563},"departamento":{"id":"94008","nombre":"R\u00edo Grande"},"id":"94008020000","localidad_censal":{"id":"94008020","nombre":"Tolhuin"},"municipio":{"id":"942007","nombre":"Tolhuin"},"nombre":"TOLHUIN","provincia":{"id":"94","nombre":"Tierra del Fuego, Ant\u00e1rtida e Islas del Atl\u00e1ntico Sur"}},{"categoria":"Localidad simple","centroide":{"lat":-54.803640460171,"lon":-68.316062477253},"departamento":{"id":"94015","nombre":"Ushuaia"},"id":"94015020000","localidad_censal":{"id":"94015020","nombre":"Ushuaia"},"municipio":{"id":"940014","nombre":"Ushuaia"},"nombre":"USHUAIA","provincia":{"id":"94","nombre":"Tierra del Fuego, Ant\u00e1rtida e Islas del Atl\u00e1ntico Sur"}}]}

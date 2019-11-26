@@ -1,0 +1,17 @@
+--- form.inc	2017-11-29 11:10:31.555251416 -0300
++++ form.inc.modificado	2017-11-29 11:10:52.475251336 -0300
+@@ -839,8 +839,12 @@ function drupal_retrieve_form($form_id,
+ 
+   // If $callback was returned by a hook_forms() implementation, call it.
+   // Otherwise, call the function named after the form id.
+-	$form = call_user_func_array(isset($callback) ? $callback : $form_id, $args);
+-	$form['#form_id'] = $form_id;
++	if($form_id != 'apachesolr_search_custom_page_search_form'){
++  	$form = call_user_func_array(isset($callback) ? $callback : $form_id, $args);
++  	$form['#form_id'] = $form_id;
++  	
++  	return $form;
++  }
+ 	
+ }
+ 

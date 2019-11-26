@@ -1,0 +1,305 @@
+#map-canvas * {
+	box-sizing: border-box;
+}
+#map-canvas .infoBox {
+	background-color: white;
+	color: black;
+}
+#map-canvas .mapa {
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 550px;
+	margin-top: 10px;
+}
+#map-canvas .infowindow-nac {
+	width: auto!important;
+	overflow: hidden;
+}
+#map-canvas .infowindow-nac ul li,
+#map-canvas .infowindow-nac p {
+	font-family: 'amplitude-regularregular';
+	font-size: 12px;
+	line-height: 13px;
+}
+#map-canvas .infowindow-nac p {
+	padding: 0;
+	margin: 0;
+}
+#map-canvas .infowindow-nac strong {
+	font-family: 'amplitude-boldregular';
+	font-weight: normal;
+}
+/*#map-canvas .img-nac,
+#map-canvas .actividades-nac,
+#map-canvas .datos-nac {
+	float: left;
+}*/
+#map-canvas .img-nac {
+	margin-bottom: 5px;
+}
+
+#map-canvas .img-nac img {
+	width: 138px;
+	height: 145px;
+	border: solid 1px #ccc;
+}
+#map-canvas .banner-clic {
+	display: block;
+	clear: both;
+	margin: 0;
+	padding: 0;
+}
+/*#map-canvas .datos-nac {
+	padding: 5px 10px 10px 10px;
+	border-right: solid 1px #ddd;
+	width: 300px;
+}*/
+#map-canvas .datos-nac p {
+	padding: 0;
+	margin: 0;
+	font-size: 13px!important;
+	font-size: 1.3rem;
+	color: #0072bc
+}
+#map-canvas .datos-nac h1 {
+	color: #2384c6;
+	font-size: 18px;
+	padding: 0 0 5px 0;
+	border-bottom: solid 1px #ddd;
+	margin: 0 0 5px 0;
+	background-color: transparent;
+}
+#map-canvas .actividades-nac {
+	padding-left: 10px;
+	position: relative;
+	top: 5px;
+}
+#map-canvas .actividades-nac .close img,
+#map-canvas .infoBox > img {
+	width: 15px;
+	height: 15px;
+	position: absolute!important;
+	top: 0;
+	right: 0;
+	z-index: 9;
+}
+#map-canvas .actividades-nac h2 {
+	font-family: 'amplitude-boldregular';
+	color: #000;
+	font-size: 12px;
+	padding: 0;
+	margin: 0;
+	text-transform: uppercase;
+	font-weight: normal;
+	background-color: transparent;
+}
+#map-canvas .actividades-nac ul {
+	padding: 0 0 5px 0;
+	margin: 0 0 5px 0;
+	list-style: none;
+	border-bottom: solid 1px #ddd;
+}
+#map-canvas .actividades-nac ul li span img {
+	width: 14px;
+	height: auto;
+	fill: #2384c6;
+	margin-right: 5px;
+}
+#map-canvas .actividades-nac ul li {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	height: 14px;
+	font-size: 11px;
+	font-size: 1.1rem;
+}
+#map-canvas .actividades-nac ul li span {
+	padding: 0;
+}
+#map-canvas .custom-combobox {
+	position: relative;
+	display: inline-block;
+}
+#map-canvas .custom-combobox-toggle {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	margin-left: -1px;
+	padding: 0;
+}
+#map-canvas .custom-combobox-input {
+	margin: 0;
+	padding: 5px 10px;
+}
+#map-canvas .datos-nac div:nth-of-type(1) {
+	/*font-weight: bolder;*/
+	text-transform: uppercase;
+	/*padding: 4px*/
+}
+#map-canvas .pane-map-0 {
+	position: relative;
+	clear: both;
+}
+/*#map-canvas {height: 300px !important;}*/
+.pane-map-0 .pane-content {
+	position: relative;
+}
+
+#myInput {
+	background-image: url('../img/searchicon.png'); /* Add a search icon to input */
+	background-position: 10px 12px; /* Position the search icon */
+	background-repeat: no-repeat; /* Do not repeat the icon image */
+	width: 100%; /* Full-width */
+	font-size: 16px; /* Increase font-size */
+	padding: 12px 20px 12px 40px; /* Add some padding */
+	border: 1px solid #ddd; /* Add a grey border */
+	margin-bottom: 12px; /* Add some space below the input */
+}
+
+#myUL {
+	/* Remove default list styling */
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+	overflow-y: auto;
+	max-height: 488px;
+	margin-bottom: 30px;
+}
+
+#myUL li a {
+	/*border: 1px solid #ddd;  Add a border to all links */
+	margin-top: -1px; /* Prevent double borders */
+	/*background-color: #f6f6f6;  Grey background color */
+	padding: 17.2px; /* Add some padding */
+	text-decoration: none; /* Remove default text underline */
+	font-size: 16px; /* Increase the font-size */
+	color: black; /* Add a black text color */
+	display: block; /* Make it into a block element to fill the whole list */
+	font-weight: 488;
+}
+
+#myUL li a.header {
+	/*background-color: #e2e2e2;  Add a darker background color for headers */
+	cursor: default; /* Change cursor style */
+	font-weight: bold;
+	border-bottom: 1px solid gray;
+	color: black;
+}
+
+#myUL li a:hover:not(.header) {
+	background-color: #eee; /* Add a hover effect to all links, except for headers */
+}
+
+#ref-pd{display: table;
+	z-index: 22222222222;
+	width: 100%;
+	background-color: rgba(245, 245, 245, 0.55);
+	padding-top: 10px;
+	padding-left: 10px;
+	padding-bottom: 10px
+}
+
+#ref-pd img{
+	float: left;
+	margin: 1px;
+	margin-right: 5px
+}
+
+#ref-pd p{
+	float: left;
+	margin-right: 10px;
+	font-size: 14px
+}
+
+.color-activo{
+	color:#009cde
+}
+
+.color-prox{
+	color:#916eaa
+}
+
+.color-cerrado{
+	color:#e3483e
+}
+
+.head-horarios{
+	padding: 4px;
+	background-color: whitesmoke;
+	font-weight: 600
+}
+
+#ref-pd p {
+	display: -webkit-inline-box
+}
+
+.datos-nac i.fa.fa-facebook-square {
+    font-size: 20px;
+}
+
+.downMap a{
+	padding-left: 0px!important
+}
+
+.downMap{
+    float: inherit!important;
+    width: auto!important;
+    position: inherit!important;
+    bottom: auto!important;
+    padding: 10px!important;
+    padding-top: 30px!important;
+	padding-left: 0px!important
+}
+
+div#map {
+    padding-left: 0px
+}
+
+p.contacto-nac {
+    font-size: 12px;
+    margin: 0!important;
+    padding-bottom: 5px;
+}
+
+h1.nac {
+    font-size: 20px;
+    font-weight: 400
+}
+
+.datos-nac [data-institucionnac]{
+	font-size: 15px;
+    text-decoration: underline
+}
+
+/*///TABLAS DATOS///*/
+.datos-nac table th, .datos-nac table td{
+	padding: 2px!important
+}
+.datos-nac table{
+	margin-top: 10px;
+	margin-bottom: 0px
+}
+
+.head-horarios thead{
+	text-transform: uppercase
+}
+.head-horarios tbody{
+	font-weight: lighter;
+}
+.head-horarios tbody tr td:first-of-type{
+	text-transform: uppercase
+}
+
+.conEventos  {
+    height: 330px; 
+    display: inline-block; 
+    width: 100%; 
+    overflow: auto;
+}
+
+.sinEventos {
+    height : 100px;
+}
+
+/*///TABLAS DATOS///*/

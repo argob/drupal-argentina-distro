@@ -1,0 +1,17 @@
+diff --git a/includes/webform.report.inc b/includes/webform.report.inc
+index 3918aee..4072f00 100644
+--- a/includes/webform.report.inc
++++ b/includes/webform.report.inc
+@@ -898,7 +898,11 @@ function webform_export_batch_size($node) {
+  * Returns a temporary export filename.
+  */
+ function _webform_export_tempname() {
+-  return drupal_tempnam(variable_get('webform_export_path', 'temporary://'), 'webform_');
++    if (variable_get('webform_export_path') && !is_dir(variable_get('webform_export_path'))) {
++        drupal_mkdir(variable_get('webform_export_path'), 0775, TRUE);
++       }
++
++     return variable_get('webform_export_path', 'temporary://'). 'webform_' . uniqid();
+ }
+
+ /**

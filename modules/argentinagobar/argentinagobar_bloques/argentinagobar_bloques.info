@@ -1,0 +1,33 @@
+name = Bloques
+core = 7.x
+package = Argentina
+
+dependencies[] = drupar_helpers
+
+files[] = src/Plugin/PluginInterface.php
+files[] = src/Plugin/Plugin.php
+files[] = src/Plugin/Atajo/FormatoAtajo.php
+files[] = src/Plugin/Atajo/FormatoAtajoCircular.php
+files[] = src/Plugin/Atajo/FormatoAtajoSimple.php
+files[] = src/Plugin/Atajo/FormatoAtajoBoton.php
+files[] = src/Plugin/Atajo/FormatoAtajoDestacadoIcono.php
+files[] = src/Plugin/Atajo/FormatoAtajoDestacadoImagen.php
+files[] = src/Plugin/Atajo/GrupoAtajos.php
+files[] = src/Plugin/Listado/FormatoListado.php
+files[] = src/Plugin/Listado/FormatoListadoTarjeta.php
+files[] = src/Plugin/Listado/FormatoListadoPersonaBuscada.php
+files[] = src/Plugin/Listado/FormatoListadoLista.php
+files[] = src/Plugin/Listado/Listado.php
+files[] = src/Plugin/Listado/ListadoNodes.php
+files[] = src/Plugin/Listado/ListadoNodesPersonaBuscada.php
+files[] = src/Plugin/Listado/ListadoTaxonomyVocabularies.php
+files[] = src/Plugin/Listado/ListadoCustom.php
+files[] = src/Plugin/Listado/ItemListado.php
+files[] = src/Plugin/Listado/ItemListadoAll.php
+files[] = src/Plugin/Listado/ItemListadoNoticia.php
+files[] = src/Plugin/Listado/ItemListadoPersonaBuscada.php
+files[] = src/Plugin/Listado/ItemListadoServicio.php
+files[] = src/Plugin/Listado/ItemListadoTaxonomy.php
+files[] = src/Plugin/Listado/Filtro.php
+files[] = src/Plugin/Listado/FiltroSubasta.php
+files[] = src/Exception/AtajosException.php

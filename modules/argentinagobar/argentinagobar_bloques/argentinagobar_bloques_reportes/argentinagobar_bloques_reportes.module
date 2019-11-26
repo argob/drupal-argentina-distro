@@ -1,0 +1,76 @@
+<?php
+
+require 'includes/argentinagobar_bloques_reportes_formularios.inc';
+
+/**
+* Implements hook_block_info().
+*/
+function argentinagobar_bloques_reportes_block_info() {
+  $blocks = array();
+  $blocks['formulario_reportes'] = array(
+    'info' => t('Formulario de reportes'),
+  );
+  return $blocks;
+}
+
+/**
+* Implements hook_block_view().
+*/
+function argentinagobar_bloques_reportes_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'formulario_reportes':
+      $block['subject'] = '';
+      $block['content'] = drupal_get_form('argentinagobar_bloques_reportes_formularios_reportes');
+      break;
+  }
+  return $block;
+}
+
+/**
+* Implements hook_permission().
+*/
+function argentinagobar_bloques_reportes_permission() {
+  return array(
+    'ver reportes nodo' => array(
+      'title' => t('Ver reportes de nodos'),
+      'description' => t('Permite ver el tab Reportes en un nodo'),
+    ),
+  );
+}
+
+/**
+* Implements hook_menu().
+*/
+function argentinagobar_bloques_reportes_menu(){
+
+  $items['node/%/reportes'] = array(
+    'title' => t('Reportes'),
+    'weight' => 10,
+    'page callback' => 'argentinagobar_bloques_reportes_listar_reportes',
+    'page arguments' => array(1),
+    'access arguments' => array('ver reportes nodo'),
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+
+function argentinagobar_bloques_reportes_listar_reportes($nid){
+  $query = db_select('argentinagobar_reportes', 'reportes')->fields('reportes')->condition('nid', $nid,'=');
+  $result = $query->execute();
+
+  while($record = $result->fetchAssoc()) {
+    $links[] = $record['haciendo'] . ' ' . $record['problema'];
+  }
+  return (!empty($links)) ? theme('argentinagobar_bloques_listado_vertical', array('links' => $links)) : NULL;
+}
+
+
+function argentinagobar_bloques_reportes_theme($existing, $type, $theme, $path){
+  return array(
+    'argentinagobar_bloques_reportes_formularios_mensaje' => array(
+      'path' => drupal_get_path('module', 'argentinagobar_bloques_reportes') . '/includes',
+      'template' => 'argentinagobar_bloques_reportes_formularios_mensaje',
+    ),
+  );
+}

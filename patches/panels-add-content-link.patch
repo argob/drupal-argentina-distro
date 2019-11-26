@@ -1,0 +1,79 @@
+--- modules/contrib/panels/templates/panels-add-content-link.tpl.php	2019-03-15 16:01:40.986111544 -0300
++++ modules/contrib/panels/templates/panels-add-content-link.tpl.php.modificado	2019-03-15 15:54:11.093471348 -0300
+@@ -4,11 +4,69 @@
+  * Template to control the add content individual links in the add content modal.
+  */
+ ?>
+-<div class="content-type-button clearfix">
+-  <?php if (isset($icon_text_button)): ?>
+-    <?php print $icon_text_button; ?>
+-  <?php else: ?>
+-    <?php print $image_button; ?>
+-    <div><?php print $text_button; ?></div>
+-  <?php endif; ?>
++ <div class="content-type-button clearfix">
++<?php
++$arg = 'argentina-gob-ar';
++$drupar = 'drupar';
++$mis = 'miscellaneous';
++$requesturi = request_uri();
++
++$rid = 34;
++#Argentina.gob.ar:
++$alerta = 'add-content-link-alerta-text-button';
++$encabezado = 'add-content-link-imagen-destacada-text-button';
++$listado = 'add-content-link-listado-text-button';
++$separador = 'add-content-link-separador-text-button';
++$texto = 'add-content-link-texto-text-button';
++$titulo = 'add-content-link-titulo-text-button';
++#Drupar:
++$atajos = 'add-content-link-atajos-text-button';
++$jumbotron = 'add-content-link-jumbotron-text-button';
++
++if (isset($user->roles[$rid]) && strpos($requesturi,$drupar) || isset($user->roles[$rid]) && strpos($requesturi,$arg)) {
++
++  switch($text_button){
++    #Argentina.gob.ar:
++    case(strpos($text_button,$alerta) !== false):
++    print $icon_text_button;
++    break;
++
++    case(strpos($text_button,$encabezado) !== false):
++    print $icon_text_button;
++    break;
++
++    case(strpos($text_button,$listado) !== false):
++    print $icon_text_button;
++    break;
++
++    case(strpos($text_button,$separador) !== false):
++    print $icon_text_button;
++    break;
++
++    case(strpos($text_button,$texto) !== false):
++    print $icon_text_button;
++    break;
++
++    case(strpos($text_button,$titulo) !== false):
++    print $icon_text_button;
++    break;
++
++    #Drupar:
++  	case(strpos($text_button,$atajos) !== false):
++    print $icon_text_button;
++  	break;
++
++  	case(strpos($text_button,$jumbotron) !== false):
++    print $icon_text_button;
++  	break;
++
++  }
++
++}elseif ((isset($user->roles[$rid]) && strpos($requesturi,$mis))) {
++    print $icon_text_button;
++}else{
++    print $icon_text_button;
++}
++?>
++
+ </div>

@@ -1,0 +1,41 @@
+<?php
+
+function argentinagobar_bloques_reportes_schema(){
+
+	$schema['argentinagobar_reportes'] = array(
+		'fields' => array(
+			'rid' => array(
+				'type' => 'serial',
+				'unsigned' => TRUE,
+        'not null' => TRUE,
+			),
+			'nid' => array(
+        'description' => 'El id del nodo reportado.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+       ),
+			'haciendo' => array(
+        'description' => 'Breve descripcion de lo que se estaba tratando de hacer.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+       ),
+			'problema' => array(
+        'description' => 'Breve descripcion del error obtenido.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+		),
+    'foreign keys' => array(
+      'node' => array(
+        'table' => 'node',
+        'columns' => array('nid' => 'nid'),
+      ),
+    ),
+    'primary key' => array('rid'),
+	);
+  
+  return $schema;
+}

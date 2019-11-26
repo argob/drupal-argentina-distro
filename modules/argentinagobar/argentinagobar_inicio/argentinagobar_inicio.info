@@ -1,0 +1,17 @@
+name = Inicio
+core = 7.x
+package = Argentina
+version = 7.x-1.0
+dependencies[] = argentinagobar_cck
+dependencies[] = ctools
+dependencies[] = fe_block
+dependencies[] = features
+dependencies[] = menu
+dependencies[] = page_manager
+features[ctools][] = page_manager:pages_default:1
+features[fe_block_settings][] = menu-menu-footer-1
+features[fe_block_settings][] = menu-menu-footer-2
+features[fe_block_settings][] = menu-menu-footer-3
+features[fe_block_settings][] = menu-menu-footer-4
+features[features_api][] = api:2
+features[page_manager_handlers][] = pm_existing_pages_node_overview__default

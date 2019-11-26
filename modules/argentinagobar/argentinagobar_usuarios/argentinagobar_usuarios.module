@@ -1,0 +1,44 @@
+<?php
+/**
+ * @file
+ * Drupal needs this blank file.
+ */
+
+/**
+ * Implements hook_menu_alter().
+ */
+function user_menu_alter(&$items) {
+	
+  // Deshabilita user register y user request password
+  // Ante el problema 
+  // Illegal string offset '_load_functions' menu.inc:3666     [warning]
+  // Illegal string offset 'to_arg_functions' menu.inc:3667
+  // Quitar esta funcion
+
+  //$items['user/register']='';
+  //$items['user/password'] ='';
+
+  return $items;
+}
+
+function argentinagobar_usuarios_permission() {
+  return array(
+    'unconditionally view unpublished content' => array(
+      'title' => t('Ver contenido sin publicar'),
+      'restrict access' => TRUE
+    )
+  );
+}
+
+function argentinagobar_usuarios_node_access($node, $op, $account) {
+  // We're only bothered about the 'view' operation at the moment
+  if ($op == 'view') {
+    // If the user has access to our new permission, let 'em at it
+    if (user_access('unconditionally view unpublished content', $account)) {
+      return NODE_ACCESS_ALLOW;
+    }
+  }
+
+  // For everything else let the system decide.
+  return NODE_ACCESS_IGNORE;
+}

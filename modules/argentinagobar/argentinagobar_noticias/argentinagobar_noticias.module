@@ -1,0 +1,20 @@
+<?php
+/**
+ * @file
+ * Code for the Noticias feature.
+ */
+
+include_once 'argentinagobar_noticias.features.inc';
+
+function argentinagobar_noticias_form_noticia_node_form_alter(&$form, &$form_state, $form_id){
+  $form['options']['status']['#default_value'] = empty($form['nid']['#value']) ? 0 : $form['options']['status']['#default_value'];
+
+  drupal_add_js(drupal_get_path('module', 'argentinagobar_noticias') . '/js/li.js');
+  drupal_add_js(drupal_get_path('module', 'argentinagobar_noticias') . '/js/div.js');
+  
+  hide($form['field_audio']);
+  hide($form['field_area']);
+  hide($form['field_imagenes']);
+  hide($form['field_links_relacionados']);
+  hide($form['field_paginas_relacionadas']);
+}

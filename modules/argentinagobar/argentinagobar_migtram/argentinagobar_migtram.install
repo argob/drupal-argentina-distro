@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Set up the migration baseball example module.
+ */
+
+function argentinagobar_migtram_enable() {
+  $path = dirname(__FILE__) . '/data';
+  //argentinagobar_migtram_get_files($path);
+    $file = 'noticias.csv';
+    Migration::registerMigration('Noticias',
+      pathinfo($file, PATHINFO_FILENAME),
+      array('source_file' => $path . '/' . $file, 'group_name' => 'noticias'));
+}
+
+function argentinagobar_migtram_disable() {
+  MigrateGroup::deregister('Noticias');
+  MigrateGroup::deregister('TramiteViejo');
+  MigrateGroup::deregister('TramiteTema');
+}

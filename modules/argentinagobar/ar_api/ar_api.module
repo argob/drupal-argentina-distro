@@ -1,0 +1,194 @@
+<?php
+/**
+ * @file
+ * Code for the API feature.
+ */
+
+//namespace Drupal\argentinagobar_servicios;
+
+//use Drupal\argentinagobar_servicios\v2\ResourceTramiteV2 as Tramite;
+
+include_once 'ar_api.features.inc';
+
+/**
+ * Implements of hook_services_resources().
+ */
+function ar_api_services_resources() {
+  return array(
+    'servicio_v2' => array(
+      'operations' => array(
+        'retrieve' => array(
+          'callback' => 'servicios_retrieve_v2',
+          'help' => 'Trae un trámite específico',
+          'args' => array(
+            array(
+            'name' => 'nid',
+            'optional' => FALSE,
+            'source' => array('path' => 0),
+            'type' => 'int',
+            'description' => 'The nid of the node to retrieve',
+            ),
+          ),
+          'access arguments' => array('access content'),
+        ),
+        'index' => array(
+          'help' => 'Lista todos los trámites',
+          #'file' => array('type' => 'inc', 'module' => 'services', 'name' => 'resources/node_resource'),
+          'callback' => 'serviciosV2_index',
+          'args' => array(
+            array(
+              'name' => 'offset',
+              'optional' => TRUE,
+              'type' => 'int',
+              'description' => 'The zero-based index of the page to get, defaults to 0.',
+              'default value' => 0,
+              'source' => array('param' => 'offset'),
+            ),
+            array(
+              'name' => 'fields',
+              'optional' => TRUE,
+              'type' => 'string',
+              'description' => 'The fields to get.',
+              'default value' => '',
+              'source' => array('param' => 'fields'),
+            ),
+            array(
+              'name' => 'filters',
+              'optional' => TRUE,
+              'type' => 'array',
+              'description' => 'Parameters array',
+              'default value' => array(),
+              'source' => array('param' => 'filters'),
+            ),
+            array(
+              'name' => 'limit',
+              'optional' => TRUE,
+              'type' => 'int',
+              'description' => 'Number of records to get per page.',
+              'default value' => 10,
+              'source' => array('param' => 'limit'),
+            ),
+            array(
+              'name' => 'options',
+              'optional' => TRUE,
+              'type' => 'array',
+              'description' => 'Additional query options.',
+              'default value' => array(
+                'orderby' => array(
+                  'created' => 'DESC'
+                )
+              ),
+              'source' => array('param' => 'options'),
+            ),
+          ),
+          'access arguments' => array('access content'),
+        ),
+      ),
+    ),
+    'servicio' => array(
+      'operations' => array(
+        'retrieve' => array(
+          'help' => 'Trae un trámite específico',
+          #'file' => array('type' => 'inc', 'module' => 'services', 'name' => 'resources/node_resource'),
+          'callback' => 'servicios_retrieve',
+          'args' => array(
+            array(
+              'name' => 'nid',
+              'optional' => FALSE,
+              'source' => array('path' => 0),
+              'type' => 'int',
+              'description' => 'The nid of the node to retrieve',
+            ),
+          ),
+          #'access callback' => 'servicios_retrieve_access',
+          'access arguments' => array('access content'),
+          #'access arguments append' => TRUE,
+        ),
+        'index' => array(
+          'help' => 'Lista todos los trámites',
+          #'file' => array('type' => 'inc', 'module' => 'services', 'name' => 'resources/node_resource'),
+          'callback' => 'servicios_index',
+          'args' => array(
+            array(
+              'name' => 'offset',
+              'optional' => TRUE,
+              'type' => 'int',
+              'description' => 'The zero-based index of the page to get, defaults to 0.',
+              'default value' => 0,
+              'source' => array('param' => 'offset'),
+            ),
+            array(
+              'name' => 'fields',
+              'optional' => TRUE,
+              'type' => 'string',
+              'description' => 'The fields to get.',
+              'default value' => '',
+              'source' => array('param' => 'fields'),
+            ),
+            array(
+              'name' => 'filters',
+              'optional' => TRUE,
+              'type' => 'array',
+              'description' => 'Parameters array',
+              'default value' => array(),
+              'source' => array('param' => 'filters'),
+            ),
+            array(
+              'name' => 'limit',
+              'optional' => TRUE,
+              'type' => 'int',
+              'description' => 'Number of records to get per page.',
+              'default value' => 10,
+              'source' => array('param' => 'limit'),
+            ),
+            array(
+              'name' => 'options',
+              'optional' => TRUE,
+              'type' => 'array',
+              'description' => 'Additional query options.',
+              'default value' => array(
+                'orderby' => array(
+                  'created' => 'DESC'
+                )
+              ),
+              'source' => array('param' => 'options'),
+            ),
+          ),
+          'access arguments' => array('access content'),
+        ),
+      ),
+    ),
+  );
+}
+
+function servicios_retrieve_access(){
+  return TRUE;
+}
+
+function servicios_retrieve($nid){
+  $servicio = new ResourceTramite();
+  drupal_json_output($servicio->retrieve($nid));
+  drupal_exit();
+}
+
+  function servicios_retrieve_v2($nid){
+    $servicio = new ResourceTramiteV2();
+    drupal_json_output($servicio->retrieve($nid));
+    drupal_exit();
+  }
+
+
+  function servicios_index($offset, $fields, $filters, $limit, $options) {
+    $servicio = new ResourceTramite();
+    drupal_json_output($servicio->index($offset, $fields, $filters, $limit, $options));
+    drupal_exit();
+  }
+
+
+
+  function serviciosV2_index($offset, $fields, $filters, $limit, $options) {
+    $servicio = new ResourceTramiteV2();
+    drupal_json_output($servicio->index($offset, $fields, $filters, $limit, $options));
+    drupal_exit();
+}
+

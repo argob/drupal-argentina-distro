@@ -1,0 +1,73 @@
+<?php
+
+/**
+ * @file
+ * Code for the Webform feature.
+ */
+
+include_once 'argentinagobar_webform.features.inc';
+
+function argentinagobar_webform_form_alter(&$form, &$form_state, $form_id) {
+    
+    $form['actions']['next']['#value'] = 'Próxima Pagina >';
+    $form['actions']['previous']['#value'] = '< Pagina anterior';
+    $form['advanced']['submit_text']['#default_value'] = 'Enviar';
+    //$form['actions']['next']['#value'] = 'Pagina anterior';
+    
+    $form['progressbar']['#page_labels'][0] = 'Inicio';
+    $form['progressbar']['#page_labels'][2] = 'Completado';
+    
+    $form['#node']->webform['progressbar_label_first'] = 'Inicio';
+    $form['#node']->webform['progressbar_label_confirmation'] = 'Completado';
+    
+    $form['progressbar']['progressbar_label_first']['#default_value'] = 'Inicio';
+    $form['progressbar']['progressbar_label_confirmation']['#default_value'] = 'Completado';
+    
+    $form['extra']['next_page_label']['#title'] = 'Etiqueta del botón de la página siguiente';
+    $form['extra']['next_page_label']['#description'] = 'Esto se usa para el botón Página siguiente en la página antes de este salto de página.';
+    
+    $form['extra']['prev_page_label']['#title'] = 'Etiqueta de botón de página anterior';
+    $form['extra']['prev_page_label']['#description'] = 'Esto se usa para el botón Página anterior en la página después de este salto de página.';
+    
+    $form['advanced']['submit_text']['#title'] = 'Enviar etiqueta de botón';
+    $form['advanced']['submit_text']['#description'] = 'Por defecto, el botón de enviar en este formulario tendrá la etiqueta Enviar. Ingrese un nuevo título aquí para anular el predeterminado.';
+    
+    $form['advanced']['next_serial']['#title'] = 'Siguiente número de envío';
+    $form['advanced']['next_serial']['#description'] = 'El valor del siguiente número de envío. Por lo general, es 1 cuando comienza y aumentará con cada envío de formulario.';
+    
+    drupal_add_js(drupal_get_path('module', 'argentinagobar_webform') . '/js/button.js');
+    
+}
+
+function argentinagobar_webform_webform_select_options_info() {
+  $items = array();
+  $items['barrios'] = array(
+    'title' => t('Barrios'),
+    'options callback' => 'argentinagobar_webform_options_barrios'
+    );
+  $items['provinciasylocalidades'] = array(
+      'title' => t('Consulta INDEC /Provincia/Departamento/Localidad/Ciudad'),
+      'options callback' => 'argentinagobar_webform_options_ConsultaINDECProvinciaDepartamentoLocalidadCiudad'
+    );
+  return $items;
+}
+
+function argentinagobar_webform_options_barrios() {
+  $consulta = new ConsultaBarriosPopulares(ApiGatewayAuth::getInstance());
+  $data = $consulta->consultar();
+  $options = array();
+  foreach($data['results'] as $id=>$result){
+    $options[$data['results'][$id]['id']] = $data['results'][$id]['display'];
+  }
+  return $options;
+}
+
+function argentinagobar_webform_options_ConsultaINDECProvinciaDepartamentoLocalidadCiudad() {
+  $consulta = new ConsultaINDECProvinciaDepartamentoLocalidadCiudad(ApiGatewayAuth::getInstance());
+  $data = $consulta->consultar();
+  $options = array();
+  foreach($data['results'] as $id=>$result){
+    $options[$data['results'][$id]['id']] = $data['results'][$id]['display'];
+  }
+  return $options;
+}

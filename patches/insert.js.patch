@@ -1,0 +1,20 @@
+diff --git a/insert.js b/insert.js
+--- a/insert.js	2017-09-28 15:49:18.116151981 -0300
++++ b/insert.js	2017-09-28 16:57:39.780229702 -0300
+@@ -40,7 +40,15 @@
+     var wrapper = $(this).parents(settings.wrapper).filter(':first').get(0);
+     var style = $('.insert-style', wrapper).val();
+     var content = $('input.insert-template[name$="[' + style + ']"]', wrapper).val();
+-    var filename = $('input.insert-filename', wrapper).val();
++    var contenido_original = content;
++    var contenidos = contenido_original.match(/(\/.*\/sites\/default\/files\/.*\/.*\/public\/.*)/);
++    var contenidoClean = contenidos.pop();
++    var hallado = contenidoClean.match(/(.*\/argentinagobar\/sites\/default\/files\/styles\/listado\/public\/)/);
++    var contenidoClean1 =hallado.pop();
++    var res = contenidoClean.replace(contenidoClean1, '');
++    var comilla=res.indexOf('?');
++    var filename = res.substring(0,comilla);
++
+     var options = {
+       widgetType: widgetType,
+       filename: filename,

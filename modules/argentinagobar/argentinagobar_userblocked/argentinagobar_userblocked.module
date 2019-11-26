@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the argentinagobar_UserBlocked feature.
+ */
+
+include_once 'argentinagobar_userblocked.features.inc';

@@ -1,0 +1,436 @@
+<?php
+
+include 'includes/argentinagobar_ciudadano_digital_completar_datos.form.inc';
+
+/**
+ * Helper functions to encrypt and decrypt using drupal_get_private_key utility.
+ */
+function encrypt($toEncrypt) { return base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, md5(drupal_get_private_key()), $toEncrypt, MCRYPT_MODE_CBC, md5(md5(drupal_get_private_key())))); }
+function decrypt($toDecrypt) { return rtrim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, md5(drupal_get_private_key()), base64_decode($toDecrypt), MCRYPT_MODE_CBC, md5(md5(drupal_get_private_key()))), "\0"); }
+
+/**
+ * Implements hook_admin().
+ */
+function argentinagobar_ciudadano_digital_admin() {
+  $form = array();
+
+  $form['argentinagobar_ciudadano_digital_profile_link'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Link al perfil de Ciudadano Digital'),
+    '#default_value' => variable_get('argentinagobar_ciudadano_digital_profile_link', ''),
+    '#size' => 60,
+    '#maxlength' => 255,
+    '#description' => t("Define el link al perfil de Ciudadano Digital"),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_menu().
+ */
+function argentinagobar_ciudadano_digital_menu() {
+
+  $items = array();
+
+  $items['admin/config/argentinagobar'] = array(
+    'title' => 'Argentina',
+    'description' => 'Personalizar la experiencia',
+    'position' => 'left',
+    'weight' => -100,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+
+  $items['admin/config/argentinagobar/ciudadanodigital'] = array(
+    'title' => 'Ciudadano Digital',
+    'description' => 'Configuración de Ciudadano Digital',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('argentinagobar_ciudadano_digital_admin'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+   );
+
+   $items['salir'] = array(
+      'page callback' => 'close_user_session_view',
+      'access callback' => true,
+    );
+
+  return $items;
+}
+
+/**
+ * Función que desloguea al usuario.
+ */
+function close_user_session_view() {
+    user_cookie_delete('userinfo');
+    drupal_goto('/');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter.
+ */
+function argentinagobar_ciudadano_digital_form_openid_connect_login_form_alter(&$form, &$form_state, $form_id){
+
+  form_load_include($form_state, 'inc', 'openid_connect', 'includes/openid_connect.forms');
+
+  $form['openid_connect_client_generic_login'] = array(
+    '#type' => 'submit',
+    '#value' => '<span class="fa fa-user fa-fw"></span>' . t('Mi Argentina'),
+    '#name' => 'generic',
+    '#attributes' => array(
+      'class' => array("btn", "btn-success"),
+    )
+  );
+  $form['#validate'] = array('argentinagobar_ciudadano_digital_form_openid_connect_login_form_validate');
+  $form['#submit'] = array('argentinagobar_ciudadano_digital_form_openid_connect_login_form_submit');
+}
+
+function argentinagobar_ciudadano_digital_form_openid_connect_login_form_validate($form_id, &$form_state){
+  if(estaLogueado()){
+    form_set_error('openid_connect_client_generic_login', t('Ya estás logueado'));
+  }
+}
+
+function estaLogueado(){
+  return isset($_COOKIE) && isset($_COOKIE['Drupal_visitor_userinfo']);
+}
+
+function argentinagobar_ciudadano_digital_form_openid_connect_login_form_submit($form_id, &$form_state){
+  openid_connect_save_destination();
+  $client_name = $form_state['triggering_element']['#name'];
+  $client = openid_connect_get_client($client_name);
+  $scopes = argentinagobar_ciudadano_digital_get_scopes();
+  $_SESSION['openid_connect_op'] = 'login';
+  $_SESSION['go_back_to'] = request_path();
+  $client->authorize($scopes);
+}
+
+/**
+ * Implements hook_menu_alter.
+ */
+function argentinagobar_ciudadano_digital_menu_alter(&$items) {
+  $items[OPENID_CONNECT_REDIRECT_PATH_BASE . '/%'] = array(
+    'page callback' => 'argentinagobar_ciudadano_digital_redirect_page',
+    //'file' => 'includes/argentinagobar_ciudadano_digital.pages.inc',
+    'page arguments' => array(1),
+    'access callback' => 'argentinagobar_ciudadano_digital_redirect_access',
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function argentinagobar_ciudadano_digital_redirect_access(){
+  return TRUE;
+}
+
+function argentinagobar_ciudadano_digital_redirect_page($client_name) {
+  // Delete the state token, since it's already been confirmed.
+  unset($_SESSION['openid_connect_state']);
+
+  // Get parameters from the session, and then clean up.
+  $parameters = array(
+    'destination' => 'user',
+    'op' => 'login',
+    'connect_uid' => NULL,
+  );
+  foreach ($parameters as $key => $default) {
+    if (isset($_SESSION['openid_connect_' . $key])) {
+      $parameters[$key] = $_SESSION['openid_connect_' . $key];
+      unset($_SESSION['openid_connect_' . $key]);
+    }
+  }
+  $destination = $parameters['destination'];
+
+  $client = openid_connect_get_client($client_name);
+  if (!isset($_GET['error']) && (!$client || !isset($_GET['code']))) {
+    // In case we don't have an error, but the client could not be loaded or
+    // there is no state token specified, the URI is probably being visited
+    // outside of the login flow.
+    return MENU_NOT_FOUND;
+  }
+
+  $provider_param = array('@provider' => $client->getLabel());
+
+  if (isset($_GET['error'])) {
+    if ($_GET['error'] == 'access_denied') {
+      // If we have an "access denied" error, that means the user hasn't granted
+      // the authorization for the claims.
+      drupal_set_message(t('Logging in with @provider has been canceled.', $provider_param), 'warning');
+    }
+    else {
+      // Any other error should be logged. E.g. invalid scope.
+      $variables = array(
+        '@error' => $_GET['error'],
+        '@details' => $_GET['error_description'],
+      );
+      watchdog('openid_connect_' . $client_name, 'Authorization failed: @error. Details: @details', $variables, WATCHDOG_ERROR);
+    }
+  }
+  else {
+    // Process the login or connect operations.
+    $tokens = $client->retrieveTokens($_GET['code']);
+    if ($tokens) {
+      if ($parameters['op'] === 'login') {
+        $success = argentinagobar_ciudadano_digital_complete_authorization($client, $tokens, $destination);
+        if (!$success) {
+          drupal_set_message(t('Logging in with @provider could not be completed due to an error.', $provider_param), 'error');
+        }
+      }
+      elseif ($parameters['op'] === 'connect' && $parameters['connect_uid'] === $GLOBALS['user']->uid) {
+        $success = openid_connect_connect_current_user($client, $tokens);
+        if ($success) {
+          drupal_set_message(t('Account successfully connected with @provider.', $provider_param));
+        }
+        else {
+          drupal_set_message(t('Connecting with @provider could not be completed due to an error.', $provider_param), 'error');
+        }
+      }
+    }
+  }
+  if (isset($_SESSION['go_back_to'])) {
+      $go_back_to = $_SESSION['go_back_to'];
+      unset($_SESSION['go_back_to']);
+      drupal_goto($go_back_to);
+  }
+  else {
+      drupal_goto('/');
+  }
+}
+
+/**
+ * Implements hook_block_view_MODULE_DELTA_alter.
+ */
+function argentinagobar_ciudadano_digital_block_view_openid_connect_openid_connect_login_alter(&$data, $block){
+  module_load_include('inc', 'openid_connect', 'includes/openid_connect.forms');
+
+  drupal_add_js(
+    drupal_get_path('module', 'argentinagobar_ciudadano_digital') . '/js/gtm_cd.js',
+    array(
+      'type' => 'file',
+      'scope' => 'footer',
+      'group' => JS_THEME,
+      'weight' => 10
+    )
+  );
+
+  if(estaLogueado()) {
+
+    global $base_url;
+    $links[] = l('Mis servicios' ,'https://mi.argentina.gob.ar');
+    $links[] = l('Mi cuenta','https://id.argentina.gob.ar');
+    $links[] = l('Salir' ,'https://id.argentina.gob.ar/salir/?next='.$base_url.'/salir/');
+
+    $data = array(
+      'subject' => '',
+      'content' => theme('argentinagobar_ciudadano_digital_account_links', array('links' => $links, 'user' => json_decode(decrypt($_COOKIE['Drupal_visitor_userinfo']), true))),
+    );
+  } else {
+    $subject = t('');
+    $data = array(
+      'subject' => '',
+      'content' => drupal_get_form('openid_connect_login_form'),
+    );
+  }
+  return $data;
+}
+
+function argentinagobar_ciudadano_digital_block_info() {
+
+  $blocks['linkMiArgentina'] = array(
+    'info' => t('Link a mi.argentina'),
+    'cache' => DRUPAL_NO_CACHE
+  );
+
+  $blocks['completarDatosMiArgentina'] = array(
+    'info' => t('Completar datos con mi.argentina'),
+    'cache' => DRUPAL_NO_CACHE
+  );
+
+  return $blocks;
+}
+
+function argentinagobar_ciudadano_digital_block_view($delta = ''){
+
+  global $base_url;
+  $url = $base_url . '/' . drupal_get_path_alias();
+
+  if(isset($_GET['expire'])){
+    logoutCiudadanoDigital();
+  }
+
+  $block = array();
+  switch ($delta) {
+    case 'linkMiArgentina':
+      $block = array(
+        'subject' => '',
+        'content' => theme('argentinagobar_ciudadano_digital_mi_argentina_link'),
+      );
+      break;
+    case 'completarDatosMiArgentina':
+      $data = array();
+      if(estaLogueado()) {
+
+        $url = $url . '?expire';
+
+        $data['titulo'] = t("¡Hola, name!",array('name' => autocompletarCiudadanoDigital('given_name')));
+        $data['mensaje'] = t("Completamos automáticamente algunos de tus datos para ahorrarte tiempo. Si no sos name, ", array('name' => autocompletarCiudadanoDigital('given_name'))) . l("cambiá de usuario","https://id.argentina.gob.ar/salir?next=".$url) . " o ". l("cerrá la sesión.","https://id.argentina.gob.ar/salir?next=".$url);
+          // $data['formulario'] = drupal_get_form('argentinagobar_ciudadano_digital_completar_datos');
+      } else {
+        $data['titulo'] = t("Completá tus datos automáticamente");
+        $data['mensaje'] = t("Registrate en Mi Argentina para guardar tus datos y ahorrar tiempo cuando tengas que completar formularios o hacer consultas.");
+        $data['formulario'] = drupal_get_form('openid_connect_login_form');
+      }
+      $block = array(
+        'subject' => '',
+        'content' => theme('argentinagobar_ciudadano_digital_completar_datos_mensaje', $data),
+      );
+      return $block;
+      break;
+    default:
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Complete the authorization after tokens have been retrieved.
+ *
+ * @param OpenIDConnectClientInterface $client
+ *   The client.
+ * @param array $tokens
+ *   The tokens as returned from OpenIDConnectClientInterface::retrieveTokens().
+ * @param string|array &$destination
+ *   The path to redirect to after authorization.
+ *
+ * @return bool
+ *   TRUE on success, FALSE on failure.
+ */
+function argentinagobar_ciudadano_digital_complete_authorization($client, $tokens, &$destination) {
+
+  /*if(estaLogueado()){
+    throw new \RuntimeException('User already logged in');
+  }*/
+
+  $user_data = $client->decodeIdToken($tokens['id_token']);
+  $userinfo = $client->retrieveUserInfo($tokens['access_token']);
+
+  if ($userinfo && empty($userinfo['email'])) {
+    watchdog('openid_connect', 'No e-mail address provided by @provider', array('@provider' => $client->getLabel()), WATCHDOG_ERROR);
+
+    return FALSE;
+  }
+
+  $sub = openid_connect_extract_sub($user_data, $userinfo);
+  if (empty($sub)) {
+    watchdog('openid_connect', 'No "sub" found from @provider', array('@provider' => $client->getLabel()), WATCHDOG_ERROR);
+
+    return FALSE;
+  }
+
+  setrawcookie('Drupal.visitor.userinfo', rawurlencode(encrypt(json_encode($userinfo))), REQUEST_TIME + 900, '/');
+
+  user_cookie_save(array('ciudadanodigitalautocompletar' => TRUE));
+
+  return TRUE;
+}
+
+function argentinagobar_ciudadano_digital_theme($existing, $type, $theme, $path) {
+  return array(
+    'argentinagobar_ciudadano_digital_account_links' => array(
+      'path' => drupal_get_path('module', 'argentinagobar_ciudadano_digital') . '/templates',
+      'template' => 'argentinagobar_ciudadano_digital_account_links',
+    ),
+    'argentinagobar_ciudadano_digital_mi_argentina_link' => array(
+      'path' => drupal_get_path('module', 'argentinagobar_ciudadano_digital') . '/templates',
+      'template' => 'argentinagobar_ciudadano_digital_mi_argentina_link',
+    ),
+    'argentinagobar_ciudadano_digital_completar_datos_mensaje' => array(
+      'path' => drupal_get_path('module', 'argentinagobar_ciudadano_digital') . '/templates',
+      'template' => 'argentinagobar_ciudadano_digital_completar_datos_mensaje',
+    ),
+  );
+}
+
+function isAutocompletarCiudadanoDigital(){
+	return (isset($_COOKIE['Drupal_visitor_ciudadanodigitalautocompletar'])) && isset($_COOKIE['Drupal_visitor_userinfo']);
+}
+
+function logoutCiudadanoDigital(){
+  unset($_COOKIE['Drupal_visitor_userinfo']);
+  unset($_COOKIE['Drupal_visitor_ciudadanodigitalautocompletar']);
+  setcookie("Drupal_visitor_userinfo", "", time()-3600);
+  setcookie("Drupal_visitor_ciudadanodigitalautocompletar", "", time()-3600);
+}
+
+function autocompletarCiudadanoDigital($dato){
+
+  // Para el caso del pasaporte que puede no tener dni_type ni dni_number pero está en el sub que es el ID de mi Argentina
+  if ( $dato == 'dni_number' OR $dato == 'dni_type' ) {
+    // Comprobar que el extranjero no consiguió un dni posteriormente
+    $dni =  isAutocompletarCiudadanoDigital() ? json_decode(decrypt($_COOKIE['Drupal_visitor_userinfo']), true)[$dato] : null;
+    if ( empty($dni) ) {
+      $sub = isAutocompletarCiudadanoDigital() ? json_decode(decrypt($_COOKIE['Drupal_visitor_userinfo']), true)['sub'] : null;
+      $sub = explode(':', $sub);
+      // Comprobar porque sino puede validar un CUIL
+      if ($sub[0]=='PASS') {
+        switch($dato){
+          case 'dni_type':
+            return 'Pasaporte';
+          break;
+          case 'dni_number':
+            return $sub[1];
+          break;
+        }
+      }
+    }
+  }
+
+	return isAutocompletarCiudadanoDigital() ? json_decode(decrypt($_COOKIE['Drupal_visitor_userinfo']), true)[$dato] : null;
+}
+
+function formatearFecha($fecha){
+  if(!empty($fecha)){
+  	$fecha = explode('/', $fecha);
+  	return $fechaFormateada = array('year' => (int) $fecha[2], 'month' => (int) $fecha[1], 'day' => (int) $fecha[0]);
+  }
+}
+
+function getIdCDTipo($sub){
+  //formatea el id de ciudadano digital
+  if(!empty($sub)){
+    $identificar = explode(':', $sub);
+    return $identificar[0];
+  }
+}
+
+function getIdCDNumero($sub,$tipo){
+  //formatea el id de ciudadano digital
+  if (!empty($sub)) {
+    $identificar = explode(':', $sub);
+    return ( $identificar[0] == $tipo ) ? $identificar[1] : null;
+  }
+}
+
+
+/*function argentinagobar_ciudadano_digital_openid_connect_claims_alter(array &$claims) {
+  $claims['dni_type'] = array(
+    'scope' => 'optional',
+  );
+}*/
+
+function argentinagobar_ciudadano_digital_get_scopes() {
+  $claims = variable_get('openid_connect_userinfo_mapping_claims', array());
+  $scopes = array('openid', 'email', 'optional');
+  $claims_info = openid_connect_claims();
+  foreach ($claims as $claim) {
+    if (isset($claims_info[$claim]) && !isset($scopes[$claims_info[$claim]['scope']]) && $claim != 'email') {
+      $scopes[$claims_info[$claim]['scope']] = $claims_info[$claim]['scope'];
+    }
+  }
+
+  return implode(' ', $scopes);
+}

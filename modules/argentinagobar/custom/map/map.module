@@ -1,0 +1,116 @@
+<?php
+
+/**
+ * @file
+ * module file for youtubechannel.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function map_help($section) {
+  switch ($section) {
+    case 'admin/help#map':
+      return t("Youtube Channel let's you have a complete video list of up to'
+	  . ' 50 videos from a YouTube Channel. A Developer's API key is'
+	  . ' required. See the readme.txt for how to obtain one.");
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function map_permission() {
+  return array(
+    'administer map' => array(
+      'title' => t('Administer MAP Nac'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function map_menu() {
+  $items = array();
+
+  $items['admin/config/services/map'] = array(
+    'title' => 'Map Nac',
+    'description' => 'Configure the settings to be used for Map Nac.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('map_settings_form'),
+    'access arguments' => array('administer map nac'),
+    'file' => 'map.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function map_block_info() {
+  $blocks = array();
+  $blocks[0] = array(
+    'info' => t('Map API - Nac'),
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function map_block_view($delta = '') {
+  $block = array();
+  if ($delta == 0) {
+    $block['subject'] = t('');
+    $block['content'] = map_getview();
+    return $block;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function map_theme() {
+  return array(
+    'map' => array(
+      'variables' => array('vars' => NULL),
+      'template' => 'map',
+    ),
+  );
+}
+
+/**
+ * Function that build the Youtube videos as a Channel.
+ */
+function map_getview() {
+    $vars = array();
+    $vars["apiKey"] = variable_get('map_api_key');
+    $vars["width"] = variable_get('map_width');
+    $vars["height"] = variable_get('map_height');
+    
+    drupal_add_css(drupal_get_path('module', 'map') . '/css/estilos.css');
+    //drupal_add_css(drupal_get_path('module', 'map') . '/css/bootstrap-combobox.css');
+    //drupal_add_js("http://maps.googleapis.com/maps/api/js?key=".$vars["apiKey"], 'external');
+    drupal_add_js(drupal_get_path('module', 'map') . '/js/bootstrap-typeahead.js');
+    //drupal_add_js(drupal_get_path('module', 'map') . '/js/bootstrap-combobox.js');
+    drupal_add_js(drupal_get_path('module', 'map') . '/js/jquery-ui.js');
+
+
+    drupal_add_css(drupal_get_path('module', 'map') . '/css/bootstrap-select.min.css');
+    drupal_add_css(drupal_get_path('module', 'map') . '/css/jquery-ui.css');
+    //drupal_add_js(drupal_get_path('module', 'map') . '/js/bootstrap-select.js');
+    //drupal_add_js(drupal_get_path('module', 'map') . '/js/infobox.js');
+    
+    drupal_add_css(drupal_get_path('module', 'map') . '/css/leaflet.css');
+    drupal_add_js(drupal_get_path('module', 'map') . '/js/leaflet.js');
+    
+
+
+
+
+   
+    return theme('map', array('vars' => $vars));
+}

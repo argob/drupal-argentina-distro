@@ -1,0 +1,24 @@
+.vertical-tab-button{
+    font-family:Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
+}
+
+.vertical-tab-button.active .btn{
+    background: #0072bc;
+    color: #fff;
+    box-shadow: none;
+    cursor: default;
+}
+
+.vertical-tab-button.first .btn{
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.vertical-tab-button.last .btn{
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.vertical-tab-button.active .btn:hover{
+    background: #0072bc;
+}

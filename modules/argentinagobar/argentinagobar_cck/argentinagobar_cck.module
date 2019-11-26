@@ -1,0 +1,35 @@
+<?php
+/**
+ * @file
+ * Code for the CCK feature.
+ */
+
+include_once 'argentinagobar_cck.features.inc';
+
+function argentinagobar_cck_form_tramite_node_form_alter(&$form, &$form_state, $form_id){
+    
+   $options0 = $form['field_duracion']['und'][0]['field_cantidades']['und'][0]['field_medida']['und']['#options']['días hábiles'];
+   $options1 = $form['field_duracion']['und'][0]['field_cantidades']['und'][0]['field_medida']['und']['#options']['días habiles'];
+   $options2 = $form['field_duracion']['und'][0]['field_cantidades']['und'][0]['field_medida']['und']['#options']['dias hábiles'];
+   $options3 = $form['field_duracion']['und'][0]['field_cantidades']['und'][0]['field_medida']['und']['#options']['dias habiles'];
+    
+    if(isset($options0)){
+        $form['field_duracion']['und'][0]['field_cantidades']['und'][0]['field_medida']['und']['#options']['días hábiles'] = 'días hábiles'; 
+    }elseif(isset($options1)){
+        $form['field_duracion']['und'][0]['field_cantidades']['und'][0]['field_medida']['und']['#options']['días habiles'] = 'días hábiles'; 
+    }elseif(isset($options2)){
+        $form['field_duracion']['und'][0]['field_cantidades']['und'][0]['field_medida']['und']['#options']['dias hábiles'] = 'días hábiles'; 
+    }elseif(isset($options3)){
+        $form['field_duracion']['und'][0]['field_cantidades']['und'][0]['field_medida']['und']['#options']['dias habiles'] = 'días hábiles'; 
+    }
+    
+}
+
+
+
+function argentinagobar_cck_init(){
+  if(module_exists('token')) {
+    include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'argentinagobar_cck') . '/argentinagobar_cck.token.inc';
+  }
+  drupal_add_http_header('X-Frame-Options', 'SAMEORIGIN');
+}

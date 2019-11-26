@@ -1,0 +1,236 @@
+<?php
+/**
+ * @file
+ * Install for a basic entities.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function argentinagobar_forms_schema() {
+  $schema = array();
+
+  $schema['argentinagobar_forms_forms'] = array(
+    'description' => 'The base table for our basic entity.',
+      'fields' => array(
+        'basic_id' => array(
+          'description' => 'Primary key of the basic entity.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+
+        'bundle_type' => array(
+          'description' => 'The bundle type',
+          'type' => 'text',
+          'size' => 'medium',
+          'not null' => TRUE
+        ),
+
+        'title' => array(
+          'description' => 'Form title',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+
+        'success_text' => array(
+          'description' => 'The default success message, always treated a non-markup plain text.',
+          'type' => 'varchar',
+          'length' => 500,
+          'not null' => TRUE,
+          'default' => ''
+        ),
+
+        'emails' => array(
+          'description' => 'A list of emails separated by a colon, always treated a non-markup plain text.',
+          'type' => 'varchar',
+          'length' => 500,
+          'not null' => TRUE,
+          'default' => ''
+        ),
+
+        'url' => array(
+          'description' => 'The URL for REST API, always treated a non-markup plain text.',
+          'type' => 'varchar',
+          'length' => 500,
+          'not null' => TRUE,
+          'default' => ''
+        ),
+
+        'fields' => array(
+          'description' => 'Array of fields.',
+          'type' => 'text',
+          'size' => 'big',
+          'not null' => FALSE
+        ),
+
+        'created' => array(
+          'description' => 'The Unix timestamp of the entity creation time.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'footer' =>array(
+          'type' => 'varchar',
+          'description' => "pie de pagina",
+          'length' => 2000,
+          'not null' => FALSE,
+        ),
+      ),
+    'primary key' => array('basic_id'),
+  );
+
+  $schema['argentinagobar_forms_fields'] = array(
+    'description' => 'The base table for our basic entity.',
+      'fields' => array(
+        'basic_id' => array(
+          'description' => 'Primary key of the basic entity.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+
+        'bundle_type' => array(
+          'description' => 'The bundle type',
+          'type' => 'text',
+          'size' => 'medium',
+          'not null' => TRUE
+        ),
+
+        'title' => array(
+          'description' => 'Field title',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+
+        'type' => array(
+          'description' => 'Field type',
+          'type' => 'varchar',
+          'length' => 100,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+
+        'validators' => array(
+          'description' => 'Array of validations.',
+          'type' => 'text',
+          'size' => 'big',
+          'not null' => FALSE
+        ),
+
+        'help' => array(
+          'description' => 'Field help',
+          'type' => 'varchar',
+          'length' => 300,
+          'not null' => FALSE,
+          'default' => '',
+        ),
+
+        'placeholder' => array(
+          'description' => 'Field helper',
+          'type' => 'varchar',
+          'length' => 100,
+          'not null' => FALSE,
+          'default' => '',
+        ),
+
+        'value' => array(
+          'description' => 'Field initial value',
+          'type' => 'varchar',
+          'length' => 100,
+          'not null' => FALSE,
+          'default' => '',
+        ),
+
+        'label' => array(
+          'description' => 'Field label',
+          'type' => 'varchar',
+          'length' => 400,
+          'not null' => FALSE,
+          'default' => '',
+        ),
+        /*
+        'options' => array(
+          'description' => 'Field options',
+          'type' => 'varchar',
+          'length' => 800,
+          'not null' => FALSE,
+          'default' => '',
+        ),
+        */
+        'options' => array(
+          'description' => 'Field options',
+          'type' => 'text',
+          'size' => 'big',
+          'not null' => FALSE,
+        ),
+
+        'created' => array(
+          'description' => 'The Unix timestamp of the entity creation time.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+    'primary key' => array('basic_id'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Add newcol field to {argentinagobar_forms_} table.
+ */
+function argentinagobar_forms_update_7102() {
+  $spec = array(
+    'type' => 'varchar',
+    'description' => "pie de pagina",
+
+    'length' => 2000,
+    'not null' => FALSE,
+  );
+  db_add_field( 'argentinagobar_forms_forms', 'footer', $spec);
+}
+
+/**
+ * Edit field at {argentinagobar_forms_fields} table.
+ */
+function argentinagobar_forms_update_7103(){
+  $spec = array(
+          'description' => 'Field options',
+          'type' => 'text',
+          'size' => 'medium',
+          'not null' => FALSE,
+        );
+  db_change_field('argentinagobar_forms_fields', 'options', 'options', $spec);
+}
+
+/**
+ * Edit field at {argentinagobar_forms_fields} table.
+ */
+function argentinagobar_forms_update_7104(){
+  $spec = array(
+          'description' => 'Field options',
+          'type' => 'text',
+          'size' => 'big',
+          'not null' => FALSE,
+        );
+  db_change_field('argentinagobar_forms_fields', 'options', 'options', $spec);
+}
+
+/*
+ * Implements hook_uninstall().
+ *
+ * At uninstall time we'll notify field.module that the entity was deleted
+ * so that attached fields can be cleaned up.
+ *
+ * @ingroup entity_example
+ */
+function argentinagobar_forms_uninstall() {
+  field_attach_delete_bundle('argentinagobar_forms_forms' , 'argentinagobar_forms_forms_bundle' );
+  field_attach_delete_bundle('argentinagobar_forms_fields' , 'argentinagobar_forms_fields_bundle' );
+}

@@ -1,0 +1,43 @@
+<?php
+//Agrega la version del tag a la barra de admin
+function argentinagobar_devel_init() {
+    exec('cd profiles/argentinagobar && git describe --abbrev=0 --tags', $tag);
+    exec('cd profiles/argentinagobar && git branch | grep \*', $branch);
+    drupal_add_js('jQuery(document).ready(function () { jQuery(".toolbar-shortcuts").after("<div style=float:right;padding:10px;background-color:red;color:white;><b>'.str_replace('*','',end($branch)).'</b> - '.end($tag).'</div>"); });', 'inline');
+}
+
+function argentinagobar_devel_cron(){
+
+	$query = db_query('
+		SELECT fm.fid 
+		FROM file_managed fm 
+		LEFT OUTER JOIN file_usage fu
+		ON fu.fid=fm.fid 
+		WHERE fu.fid is null 
+		ORDER BY timestamp DESC
+		LIMIT 0,20
+	');
+
+	$list=array();
+
+	while($record = $query->fetchAssoc()) {
+
+		$list[]=$record['fid'];
+
+		$file = db_insert('file_usage') // Table name no longer needs {}
+		->fields(array(
+		  'fid' => $record['fid'],
+		  'module' => 'file_entity',
+		  'type' => 'file',
+		  'id' => 0,
+		  'count' => 1,
+		))
+		->execute();
+
+	}
+
+	watchdog('File usage', '<pre>'. print_r($list, TRUE) .'</pre>');
+
+}
+
+?>

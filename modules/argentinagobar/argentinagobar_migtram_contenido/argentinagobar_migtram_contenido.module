@@ -1,0 +1,48 @@
+<?php
+/**
+ * @file
+ * Code for the argentinagobar_migtram_contenido feature.
+ */
+
+include_once 'argentinagobar_migtram_contenido.features.inc';
+
+function argentinagobar_migtram_contenido_ctools_plugin_directory($owner, $plugin_type) {
+   if ($owner == 'ctools' && $plugin_type == 'content_types') {
+     return 'plugins/' . $plugin_type;
+   }
+}
+
+function argentinagobar_migtram_contenido_theme($existing, $type, $theme, $path) {
+  $templates = array(
+    'argentinagobar_migtram_campo' => array(
+      'path' => drupal_get_path('module', 'argentinagobar_migtram_contenido') . '/templates',
+      'template' => 'argentinagobar_migtram_campo'
+    ),
+    'argentinagobar_migtram_imagen_destacada_argentinagobar_migtram' => array(
+      'path' => drupal_get_path('module', 'argentinagobar_migtram_contenido') . '/templates',
+      'template' => 'argentinagobar_migtram_imagen_destacada_argentinagobar_migtram'
+    ),
+    'argentinagobar_migtram_texto' => array(
+      'path' => drupal_get_path('module', 'argentinagobar_migtram_contenido') . '/templates',
+      'template' => 'argentinagobar_migtram_texto'
+    ),
+  );
+  return $templates;
+}
+
+function argentinagobar_migtram_array_campos(){
+  return array(
+      'requisitos' => t('Requisitos'),
+      'comosehace' => t('Cómo se hace'),
+      'costo' => t('Costo'),
+      'vigencia' => t('Vigencia'),
+      'asistencias' => t('Asistencias necesarias'),
+      'tiempo_de_entrega' => t('Tiempo de entrega'),
+      'observaciones' => t('Observaciones'),
+      'donde' => t('Dónde se hace'),
+      'cuando' => t('Cuándo se hace'),
+      'sms' => t('SMS'),
+      'carta_compromiso' => t('Carta compromiso'),
+      'acciones' => t('Acciones'),
+  );
+}

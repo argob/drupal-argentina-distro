@@ -1,0 +1,6 @@
+name = Ciudadano Digital
+description = Integra Ciudadano Digital en Argentina.gob.ar
+core = 7.x
+package = Argentina
+version = 7.x-1.0
+dependencies[] = openid_connect

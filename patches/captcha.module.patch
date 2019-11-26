@@ -1,0 +1,22 @@
+diff --git a/captcha.module b/captcha.module
+index 50cbe15..157e2ad 100644
+--- a/captcha.module
++++ b/captcha.module
+@@ -676,7 +676,14 @@ function captcha_validate($element, &$form_state) {
+   $form_id = $captcha_info['this_form_id'];
+
+   // Get CAPTCHA response.
+-  $captcha_response = $form_state['values']['captcha_response'];
++  //$captcha_response = $form_state['values']['captcha_response'];
++  //Resuelve Undefined index: g-recaptcha-response
++  if ($captcha_info['module'] == 'recaptcha') {
++    $captcha_response = '';
++   }
++   else {
++     $captcha_response = $form_state['values']['captcha_response'];
++   }
+
+   // Get CAPTCHA session from CAPTCHA info
+   // TODO: is this correct in all cases: see comment and code in previous revisions?
+--
+2.17.1

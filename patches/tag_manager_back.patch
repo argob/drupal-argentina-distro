@@ -1,0 +1,24 @@
+diff --git a/templates/page.tpl.php b/templates/page.tpl.php
+index 0765a9c..86af26c 100644
+--- a/templates/page.tpl.php
++++ b/templates/page.tpl.php
+@@ -4,7 +4,9 @@
+ * Main page template.
+ */
+ ?>
+-
++<!-- Google Tag Manager -->
++<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-P68ZXT"height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript> <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0], j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src= '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f); })(window,document,'script','dataLayer','GTM-P68ZXT');</script>
++<!-- End Google Tag Manager -->
+ <div id="branding" class="clearfix">
+ 
+ 	<?php print $breadcrumb; ?>
+@@ -71,7 +73,7 @@
+         <?php print render($page['sidebar_right']); ?>
+       </div>
+     <?php endif; ?>
+-	
++
+ 	</div>
+ 
+ 	<?php if (isset($page['content_after'])): ?>

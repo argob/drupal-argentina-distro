@@ -1,0 +1,1 @@
+<small><?php print $campo; ?></small>

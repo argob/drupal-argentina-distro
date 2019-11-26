@@ -1,0 +1,6 @@
+name = Argentina Form Styler
+description = Permite agregar clases en los formularios de form API que incorporan funcionalidades con jQuery
+core = 7.x
+package = Argentina
+
+files[] = argentinagobar_formstyler.module

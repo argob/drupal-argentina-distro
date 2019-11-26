@@ -1,0 +1,20 @@
+--- modules/contrib/panelizer/plugins/entity/PanelizerEntityDefault.class.php	2019-08-29 14:14:39.026939393 -0300
++++ modules/contrib/panelizer/plugins/entity/PanelizerEntityDefault.patch_reset.class.php	2019-08-29 14:17:45.029019202 -0300
+@@ -1246,11 +1246,12 @@
+             );
+           }
+         }
+-        if ($status == t('Custom')) {
+-          $links_array['reset'] = array(
+-            'title' => t('reset'),
+-            'href' => $base_url . '/' . $view_mode . '/reset',
+-          );
++        global $user;
++        if( ($status == t('Custom') && isset($user->roles[4])) || ($status == t('Custom') && isset($user->roles[21]))){
++            $links_array['reset'] = array(
++              'title' => t('reset'),
++              'href' => $base_url . '/' . $view_mode . '/reset',
++            );
+         }
+       }
+       else {

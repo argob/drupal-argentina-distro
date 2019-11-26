@@ -1,0 +1,8 @@
+name = Bloques: Reportes
+description = Bloques exclusivos del tipo de contenido Servicio
+package = Views
+dependencies[] = argentinagobar_bloques
+files[] = argentinagobar_bloques_reportes.module
+core = "7.x"
+project = "argentinagobar_bloques"
+package = Argentina

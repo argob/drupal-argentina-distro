@@ -1,0 +1,15 @@
+<?php
+
+	include_once 'includes/argentinagobar_bloques.block.inc';
+	include_once 'includes/argentinagobar_bloques.form.inc';
+	include_once 'includes/argentinagobar_bloques.theme.inc';
+	include_once 'includes/argentinagobar_bloques.cron.inc';
+
+	/*
+	* Implements hook_ctools_plugin_directory().
+	*/
+	function argentinagobar_bloques_ctools_plugin_directory($owner, $plugin_type) {
+	   if ($owner == 'ctools' && $plugin_type == 'content_types') {
+	     return 'plugins/' . $plugin_type;
+	   }
+	}

@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the argentinagobar_captcha_y_recaptcha feature.
+ */
+
+include_once 'argentinagobar_captcha_y_recaptcha.features.inc';

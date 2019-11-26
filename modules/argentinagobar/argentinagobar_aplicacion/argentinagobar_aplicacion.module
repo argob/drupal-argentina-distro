@@ -1,0 +1,11 @@
+<?php
+/**
+ * @file
+ * Code for the Aplicación feature.
+ */
+
+include_once 'argentinagobar_aplicacion.features.inc';
+
+function argentinagobar_aplicacion_form_aplicacion_node_form_alter(&$form, &$form_state, $form_id){
+  $form['options']['status']['#default_value'] = empty($form['nid']['#value']) ? 0 : $form['options']['status']['#default_value'];
+}

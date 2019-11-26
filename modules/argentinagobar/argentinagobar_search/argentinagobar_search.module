@@ -1,0 +1,285 @@
+<?php
+/**
+ * @file
+ * Code for the argentinagobar_search feature.
+ */
+
+include_once 'argentinagobar_search.features.inc';
+include_once 'argentinagobar_search.inc';
+include_once 'argentinagobar_search.solr_alter.inc';
+
+function argentinagobar_search_enable(){
+
+	$active_search = array(
+		'apachesolr_search' => 'apachesolr_search',
+		'file_entity' => 0,
+		'node' => 0,
+		'user' => 0,
+	);
+
+	variable_set('search_default_module', 'apachesolr_search');
+	variable_set('search_active_modules', $active_search);
+
+}
+
+function argentinagobar_search_form_apachesolr_search_custom_page_search_form_alter(&$form, &$form_state, $form_id){
+
+	$form['#attributes']['class'][] = 'main-form';
+	$form['#attributes']['role'][] = 'search';
+
+  $form['basic'] = array(
+    '#type' => 'container',
+    '#theme_wrappers' => array(),
+    '#theme' => array('form_input_group'),
+  );
+
+  $form['basic']['keys'] = array(
+    '#type' => 'textfield',
+    '#theme_wrappers' => array(),
+    '#default_value' => (isset($form['basic']['keys']['#default_value']) ? $form['basic']['keys']['#default_value'] : ''),
+    '#size' => 20,
+    '#maxlength' => 255,
+		'#attributes' => array(
+	      'placeholder' => t('Buscar trámites, servicios o áreas'),
+	      'id' => array('edit-keys'),
+	      'aria-label' => array('Buscar trámites, servicios o áreas'),
+    ),
+  );
+
+  $form['basic']['submit'] = array(
+    '#type' => 'submit',
+    '#prefix' => '<span class="input-group-btn">',
+    '#suffix' => '</span>',
+    '#attributes' => array('class' => array('btn-primary fa fa-search'), 'aria-labelledby' => array('edit-keys')),
+  );
+
+	$form['basic']['submit']['#prefix'] = '<span class="input-group-btn">';
+	$form['basic']['submit']['#suffix'] = '</span>';
+
+  $form['#submit'][] = 'argentinagobar_search_ApacheSolrSearchCustomForm_submit';
+
+	drupal_add_js(drupal_get_path('module', 'argentinagobar_search') .'/js/solr_search.js', array('scope' => 'footer', 'weight' => 1));
+
+  $form['#search_page'] = null;
+}
+
+function argentinagobar_search_ApacheSolrSearchCustomForm_submit($form, &$form_state) {
+	$form_state['redirect'] = array(
+		'buscar/'.$form_state['values']['keys'],
+		array('query' => array()),
+		302,
+  );
+}
+
+function argentinagobar_search_block_info() {
+  return array(
+    'ApacheSolrInput' => array(
+      'info' => t('Apache Solr Search'),
+    ),
+    'apache_solr_search_navbar' => array(
+      'info' => t('Apache Solr Search para Navegación'),
+    ),
+  );
+}
+
+function argentinagobar_search_block_view($delta = '') {
+
+  $blocks       = array();
+  $search_form  = drupal_get_form('apachesolr_search_custom_page_search_form');
+
+  switch ($delta) {
+
+    case 'ApacheSolrInput':
+
+      if(!empty($img = variable_get('backimage_buscador'))){
+        $check = db_select('file_managed', 'f')
+        ->fields('f', array('fid'))
+        ->condition('fid', $img)
+        ->execute()
+        ->fetchField();
+
+        if($check){
+
+        $imagen = file_load($img);
+        drupal_add_js('jQuery(document).ready(function () {
+          jQuery("section.jumbotron").css("background-image","url('.image_style_url('jumbotron', $imagen->uri).')");
+        });', 'inline');
+
+        }
+      }
+
+      $blocks['content'] = array(
+        '#type' => 'markup',
+        '#markup' => theme('apache_solr_search_home',
+          array(
+            'form' => $search_form,
+            'image' => image_style_url('jumbotron', $imagen->uri),
+          )
+        ),
+      );
+
+      $blocks['content']['#contextual_links']['argentinagobar_search'] = array('admin/config/search/settings/',array('search'));
+
+      break;
+
+    case 'apache_solr_search_navbar':
+
+      $blocks['content'] = theme('apache_solr_search_navbar',
+        array('form' => $search_form)
+      );
+
+    break;
+  }
+
+  return $blocks;
+}
+
+function argentinagobar_search_theme($existing, $type, $theme, $path) {
+  return array(
+  	'ApacheSolrSearchCustomForm' => array(
+  		'render element' => 'form',
+      'path' => drupal_get_path('module', 'argentinagobar_search') . '/templates',
+      'template' => 'buscar_home'
+    ),
+    'apache_solr_search_navbar' => array(
+      'path' => drupal_get_path('module', 'argentinagobar_search') . '/templates',
+      'template' => 'apache_solr_search_navbar',
+    ),
+    'apache_solr_search_home' => array(
+      'path' => drupal_get_path('module', 'argentinagobar_search') . '/templates',
+      'template' => 'apache_solr_search_home',
+    ),
+    'buscar_no_result' => array(
+  	'render element' => 'form',
+    	'path' => drupal_get_path('module', 'argentinagobar_search') . '/templates',
+    	'template' => 'buscar_no_result'
+    ),
+    'argentinagobar_search_node_page_reorder' => array(
+      'render element' => 'form',
+      'file' => 'argentinagobar_search_reorder.inc',
+    ),
+  );
+}
+
+//Altera los facets para no mostrar trámite migrado sino un merge entre los trámites migrados y servicios
+function argentinagobar_search_facet_items_alter(&$build, &$settings) {
+
+  drupal_add_css(drupal_get_path('module', 'argentinagobar_search').'/css/facets.css');
+  drupal_add_js(drupal_get_path('module', 'argentinagobar_search') .'/js/facet_all_results.js', array('scope' => 'footer', 'weight' => 2));
+
+	//Setea en facetado las variables de la configuracion
+	$facet_config=variable_get('facet_config');
+	$settings->settings['facet_more_text']=$facet_config['vermas_facets'];
+	$settings->settings['facet_fewer_text']=$facet_config['vermenos_facets'];
+	$settings->settings['soft_limit']=$facet_config['soft_limit'];;
+
+	//Pone un limite a la cantidad de caracteres del facet
+
+	foreach($build as $key => $value){
+		if($build[$key]['#active']!=1){
+			$build[$key]['#markup'] = (strlen($build[$key]['#markup']) > 30) ? substr($build[$key]['#markup'],0,22).'...' : $build[$key]['#markup'];
+		}
+	}
+
+	//Altera los facets para no mostrar trámite migrado sino un merge entre los trámites migrados y servicios
+
+	if ($settings->facet == "bundle") {
+
+		if(isset($build['argentinagobar_migtram']) OR isset($build['tramite'])){
+
+
+      $counts = isset($build['tramite']) ? $build['argentinagobar_migtram']['#count']+$build['tramite']['#count'] : $build['argentinagobar_migtram']['#count'];
+
+			if(isset($build['argentinagobar_migtram']['#path'])){
+				$path = $build['argentinagobar_migtram']['#path'];
+			}else{
+				$path = $build['tramite']['#path'];
+			}
+
+			$active = 0;
+			if (isset($_GET['f']) && preg_match('/argentinagobar_migtram/',var_export($_GET['f'], true))) $active=1;
+
+			//Reconstruye un facet con las opciones de servicio
+			$build['tramite']=array(
+			    '#markup' => 'Servicio',
+			    '#path' => $path,
+			    '#html' => '',
+			    '#indexed_value' => array('tramite','argentinagobar_migtram'),
+			    '#count' => $counts,
+			    '#active' => $active,
+			    '#item_parents' => array(),
+			    '#item_children' => array(),
+			);
+
+			//Toma el array de facets y le agrega o quita el facet unificado según corresponde
+			if($active!=1){
+				$_GET['f'][] = 'bundle:(tramite OR argentinagobar_migtram)';
+				$build['tramite']['#query']['f'] = $_GET['f'];
+			}else{
+				if(($key = array_search('bundle:(tramite OR argentinagobar_migtram)', $_GET['f'])) !== false) {
+				    unset($_GET['f'][$key]);
+				}
+				$build['tramite']['#query']['f'] = $_GET['f'];
+			}
+
+			//Quita el facet de migración de trámites
+			unset($build['argentinagobar_migtram']);
+
+		}
+    }
+}
+
+function argentinagobar_search_search_data($buscar, $resultados){
+
+	if (!in_array($buscar, array('%2A','*',''))){
+		$buscar = '"'.urldecode($buscar).'"';
+		$output = "<h3>Se encontraron $resultados resultados para <span class='text-primary'>$buscar</span></h3>";
+	}else{
+		$output = "<h3>Se encontraron $resultados resultados</h3>";
+	}
+
+	print $output;
+}
+
+//Agrega un campo con el summary de los nodos a los fields de búsqueda de solr
+function argentinagobar_search_apachesolr_index_document_build($document, $node, $namespace) {
+
+  if(propertyExists($node, 'body') &&  !empty($node->body[$node->language][0]['safe_summary'])){
+    $summary = $node->body[$node->language][0]['safe_summary'];
+  }
+  elseif(isset($node->body['und'][0]['safe_summary'])){
+    $summary = $node->body['und'][0]['safe_summary'];
+  }
+
+  if(!empty($summary)){
+  	$document->addField('ss_body_summary', strip_tags($summary, '<br>'));
+  }
+
+  //Harcodeo para paginas que son tramites
+
+  $paginasTramite = array(1540, 15, 1528, 1417, 1909, 2263, 1679, 1964, 1904, 1899, 2124, 2004, 1999, 1994, 1989, 1984, 1949, 1944, 1929, 2089, 1889, 1974, 1954, 1809, 2029, 2024, 1894, 1829, 1784, 1684);
+
+  if($node->type=='argentinagobar_migtram'){
+  	$document->addField('ss_es_tramite', 1);
+  }
+
+  if($node->type=='page' and  in_array($node->nid, $paginasTramite)){
+  	$document->addField('ss_es_tramite', 1);
+  }
+}
+
+//Altera las queries para incluir el body summary
+function argentinagobar_search_apachesolr_query_prepare($query) {
+  $query->addParam('fl', 'ss_body_summary');
+}
+
+/**
+ * Implements hook_forms().
+ */
+function argentinagobar_search_forms() {
+  $forms['apachesolr_search_custom_page_search_form']= array(
+    'callback' => 'apachesolr_search_custom_page_search',
+    'callback arguments' => array('apachesolr_search_custom_page_search'),
+  );
+  return $forms;
+}

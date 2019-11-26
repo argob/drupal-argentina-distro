@@ -1,0 +1,20 @@
+h3.filter {
+    margin-top: 25px;
+    font-size: 18px;
+    color: #0695d6;
+    padding: 10px 15px;
+    font-weight: bold;
+    background-color: #eee;
+    border-radius: 4px;
+}
+
+.facetapi-facetapi-links .badge {
+    line-height: 1.5;
+    min-width: 35px;
+    border-radius: 4px;
+}
+
+aside .panel-body h2.h3.section-title {
+    color: #777;
+    text-transform: capitalize;
+}

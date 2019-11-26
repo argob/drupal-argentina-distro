@@ -1,0 +1,14 @@
+name = Map
+description = Muestra los nacs en un mapa
+core = 7.x
+
+files[] = map.admin.inc
+files[] = map.module
+files[] = map.tpl.php
+
+; Information added by Drupal.org packaging script on 2014-06-22
+version = "7.x-2.1"
+core = "7.x"
+project = "map"
+datestamp = "1403411629"
+

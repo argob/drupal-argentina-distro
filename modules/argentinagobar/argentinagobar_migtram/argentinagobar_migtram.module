@@ -1,0 +1,1868 @@
+<?php
+
+  include_once 'argentinagobar_migtram.noticias.inc';
+  include_once 'argentinagobar_migtram.comprobarCampos.inc';
+  include_once 'data/organismosNodo.inc';
+  include_once 'src/markdownify/markdownify.php';
+
+  function argentinagobar_migtram_form_alter(&$form, &$form_state, $form_id){
+    global $base_url;
+    global $user;
+
+    // Comprueba que sea un edit form de Servicio[tramite]
+    if($form_id = 'tramite_node_form'){
+
+      $nodo = node_load(arg(1));
+
+      // Muestro de donde proviene el Servicio en el form del nodo
+      if(isset($nodo->type)){
+        if ($nodo->type == 'tramite' && !empty($nodo->field_id_migracion['und'][0]['value'])) {
+          $nid = $nodo->field_id_migracion['und'][0]['value'];
+
+          if (node_access("update", $nodo, $user) === TRUE) {
+            drupal_set_message("Este Servicio proviene del Trámite heredado <a style=background-color:orange;padding:5px 10px;border-radius:5px;color:#0f0f9e;font-weight:bold;font-size:15px; target=_blank href=$base_url/node/$nid/edit>$nid</a> consultelo para más datos</div>");
+          }
+        }
+      }
+    }
+  }
+
+  function argentinagobar_migtram_menu() {
+
+      $items = array();
+
+      $items['admin/content/migrate/migtram_servicios'] = array(
+          'title' => t('Migrar contenidos a tipo Servicios.'),
+          'type' => MENU_LOCAL_TASK,
+          'description' => 'Mover los contenidos de Migtram a Servicios',
+          'page callback' => 'argentinagobar_migtram_configure',
+          'access arguments' => array('administer users'),
+          'weight' => 100,
+      );
+
+      $items['admin/reports/migrar-servicios'] = array(
+          'access arguments' => array('administer users'),
+          'title' => 'Migrar servicios',
+          'description' => 'Resultado de la última migración de servicios realizada',
+          'page callback' => 'argentinagobar_migtram_rpte_migrar_servicios',
+      );
+
+      return $items;
+  }
+
+  function argentinagobar_migtram_configure() {
+      drupal_set_title(t('Contenidos a Servicios'));
+      return drupal_get_form('argentinagobar_migtram_settings_form');
+  }
+
+  /**
+  * Import form
+  */
+  function argentinagobar_migtram_settings_form() {
+
+      // Hice este form para parametrizar la migración si queres un solo nodo con id o determinada cantidad de nodos que cumplen la condicion de ser tramites migrados y estar publicados actualmente
+
+      $query = db_select('node', 'n');
+      $query->fields('n', array('nid', 'title', 'vid'));
+      $query->condition('n.type', 'argentinagobar_migtram', '=');
+      $query->condition('n.status', 1, '=');
+      $query->leftJoin('field_data_field_flag', 'ff', 'n.vid = ff.revision_id');
+      $query->isNull('ff.field_flag_value');
+      $query->orderBy('n.nid', 'ASC');
+
+      $results = $query->execute()->fetchAll();
+
+      $query2 = db_select('node', 'n');
+      $query2->fields('n', array('nid', 'title', 'vid'));
+      $query2->fields('im', array('field_id_migracion_value'));
+      $query2->join('field_data_field_es_migrado', 'em', 'n.vid = em.revision_id');
+      $query2->join('field_data_field_id_migracion', 'im', 'em.revision_id = im.revision_id');
+      $query2->leftJoin('field_data_field_flag', 'ff', 'n.vid = ff.revision_id');
+      $query2->condition('em.field_es_migrado_value', 1, '=');
+      $query2->orderBy('n.nid', 'ASC');
+
+      $results2 = $query2->execute()->fetchAll();
+
+      $query3 = db_select('node', 'n');
+      $query3->fields('n', array('nid', 'title', 'vid'));
+      $query3->fields('im', array('field_id_migracion_value'));
+      $query3->join('field_data_field_es_migrado', 'em', 'n.vid = em.revision_id');
+      $query3->join('field_data_field_id_migracion', 'im', 'em.revision_id = im.revision_id');
+      $query3->leftJoin('field_data_field_flag', 'ff', 'n.vid = ff.revision_id');
+      $query3->condition('em.field_es_migrado_value', 2, '=');
+      $query3->orderBy('n.nid', 'ASC');
+
+      $results3 = $query3->execute()->fetchAll();
+
+      $context['results']['mensajes'] = '';
+
+      $form = array();
+
+      /*
+        PASO 1 - Migracion Form
+      */
+      $form['migrate'] = array(
+          '#description' => 'Existen '.count($results).' Nodos Publicados y del tipo <b>migración</b> esperando a ser importados.',
+          '#type' => 'fieldset',
+          '#title' => t('Paso 1: Migrar'),
+          '#collapsible' => TRUE,
+          
+          );
+      $form['migrate']['#disabled'] = count($results) == 0 ? TRUE : FALSE;
+      $form['migrate']['#collapsed'] = count($results) == 0 ? TRUE : FALSE;
+      $form['migrate']['mig_cantidad'] = array(
+          '#description' => 'Seleccione la cantidad de <b>nodos</b> a migrar.',
+          '#type' => 'textfield',
+          '#title' => t('Cantidad'),
+          '#required' => FALSE,
+          );
+      $form['migrate']['submit'] = array(
+          '#type' => 'submit',
+          '#value' => t('Migrar Nodos'),
+          '#submit' => array('argentinagobar_migtram_settings_mig_form_submit'),
+          );
+
+      $form['pre-pre-fixes']['QuitarNodos'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Pre Pre Paso 2: Quitar Nodos de Fix'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+      );
+
+      $form['pre-pre-fixes']['QuitarNodos']['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Fix Quitar Nodos'),
+        '#submit' => array('argentinagobar_migtram_settings_fixes_Quitar_Nodos'),
+      );
+
+      $form['pre-fixes']['htmlToMd'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Pre Paso 2: Fix Html to MD'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+      );
+
+      $form['pre-fixes']['htmlToMd']['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Fix Html to MD'),
+        '#submit' => array('argentinagobar_migtram_settings_fixes_htmlToMd'),
+      );
+
+      /*
+        PASO 2 - Fixes Form
+      */
+      $form['fixes'] = array(
+        '#description' => 'Existen '.count($results2).' nodos migrados, esperando para fixearse.',
+        '#type' => 'fieldset',
+        '#title' => t('Paso 2: Fixes'),
+        '#collapsible' => TRUE
+      );
+
+      
+
+      $form['fixes']['#collapsed']  = count($results2) == 0 ? TRUE : FALSE;
+      $form['fixes']['#disabled']   = count($results2) == 0 ? TRUE : FALSE;
+
+      $form['fixes']['json_texto_servicio'] = array(
+          '#description' => 'Un Json con los nodos a fixear',
+          '#type' => 'textarea',
+          '#title' => t('Json'),
+          );
+      $form['fixes']['desde'] = array(
+          '#description' => 'Dato desde json, siendo 1 el primer elemento',
+          '#type' => 'textfield',
+          '#title' => t('Desde'),
+          );
+      $form['fixes']['hasta'] = array(
+          '#description' => 'Dato hasta json.',
+          '#type' => 'textfield',
+          '#title' => t('Hasta'),
+          );
+      $form['fixes']['submit'] = array(
+          '#type' => 'submit',
+          '#value' => t('Aplicar Fixes'),
+          '#submit' => array('argentinagobar_migtram_settings_fixes'),
+          );
+
+      if(count($results2) != 0){
+        
+        $form['fixes']['faltantes'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Nodos Faltantes'),
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+            );
+
+        $form['fixes']['faltantes']['submit'] = array(
+            '#type' => 'submit',
+            '#value' => t('Ver Nodos Faltantes'),
+            '#submit' => array('argentinagobar_migtram_settings_fixes_faltantes'),
+            );
+      }
+
+
+
+
+      /*
+        PASO 3 - Publicar Form
+      */
+      $form['publish'] = array(
+          '#description' => 'Publica <b>Nodo Migrado</b>, despulica <b>Nodo Viejo</b>, crea redireccion del <b>Nodo Viejo</b> al <b>Nodo Migrado</b> y asigna alias al <b>Nodo Migrado</b>.<br/> <br/> Existen '.count($results3).' nodos migrados, esperando para ser publicados.',
+          '#type' => 'fieldset',
+          '#title' => t('Paso 3: Publicar'),
+          '#collapsible' => TRUE,
+          );
+      $form['publish']['#collapsed'] = count($results3) == 0 ? TRUE : FALSE;
+      
+      $form['publish']['pub_cantidad'] = array(
+          '#description' => 'Seleccione la cantidad de <b>nodos</b> a Publicar.',
+          '#type' => 'textfield',
+          '#title' => t('Cantidad'),
+          '#required' => FALSE,
+          );
+      $form['publish']['submit'] = array(
+          '#type' => 'submit',
+          '#value' => t('Publicar Nodos Migrados'),
+          '#submit' => array('argentinagobar_migtram_settings_pub_form_submit'),
+          );
+
+      /*
+        PASO - Re-Migrar Nodo Form
+      */
+      $form['re-migrate'] = array(
+          '#description' => 'Se pueden re-migrar los modulos (viejos), para vover a correr el paso 1. <b>modifica el nodo original.</b> ',
+          '#type' => 'fieldset',
+          '#title' => t('Re-migrar Nodo'),
+          '#collapsible' => TRUE,
+          '#collapsed' => TRUE,
+          );
+      $form['re-migrate']['node_re_migrate']=array(
+          '#description' => 'Un Nodo especifico. Numero del nodo.',
+          '#type' => 'textfield',
+          '#title' => t('Nodo'),
+          );
+      $form['re-migrate']['submit'] = array(
+          '#type' => 'submit',
+          '#value' => t('Re-Migrar Nodo'),
+          '#submit' => array('argentinagobar_migtram_settings_re_migrar_submit'),
+          );
+
+      return $form;
+  }
+
+  /**
+  *  PASO 1 - Migrar Settings (Batch & Process)
+  */
+  function argentinagobar_migtram_settings_mig_form_submit($form, &$form_state) {
+    argentinagobar_migtram_batch_paso1($form_state['values']['mig_cantidad']);
+  }
+
+  /**
+  * PASO 2 - Fixes Quitar Nodos
+  */
+  function argentinagobar_migtram_settings_fixes_Quitar_Nodos(){
+    argentinagobar_migtram_fixes_quitarNodos_batch();
+  }
+
+  /**
+  * PASO 2 - Fixes Html to MD
+  */
+  function argentinagobar_migtram_settings_fixes_htmlToMd(){
+    argentinagobar_migtram_fixes_htmlToMd_batch();
+  }
+
+  /**
+  *  PASO 2 - Fixes Settings (Process)
+  */
+  function argentinagobar_migtram_settings_fixes($form, &$form_state) {
+    argentinagobar_migtram_fixes_batch($form_state['values']['json_texto_servicio'], $form_state['values']['desde'], $form_state['values']['hasta']);
+  }
+
+  /**
+  *  PASO 2 - Fixes Faltantes Settings (Process 2)
+  */
+  function argentinagobar_migtram_settings_fixes_faltantes($form, &$form_state) {
+    argentinagobar_migtram_fixes_faltantes_process($form_state['values']['json_texto_servicio'], $form_state['values']['desde'], $form_state['values']['hasta']);
+  }
+
+  /**
+  * PASO 3 - Publicar Settings (Batch & Process)
+  */
+  function argentinagobar_migtram_settings_pub_form_submit($form, &$form_state) {
+    argentinagobar_migtram_batch_publish($form_state['values']['pub_cantidad']);
+  }
+
+  /**
+  * PASO - Re Migrar Nodo Settings (Process)
+  */
+  function argentinagobar_migtram_settings_re_migrar_submit($form, &$form_state) {
+    argentinagobar_migtram_re_migrar_process($form_state['values']['node_re_migrate']);
+  }
+
+  /**
+  * PASO 1 - Migrar batch
+  */
+  function argentinagobar_migtram_batch_paso1($cantidad) {
+
+    // Defino las opciones del batch que utiliza la funcion nativa de Drupal
+    $batch = array(
+      'operations' => array(),
+      'finished' => 'argentinagobar_migtram_batch_finished',
+      'title' => t('Importando terminos perdidos'),
+      'init_message' => t('Comienza la importación...'),
+      'progress_message' => t('Procesados @current de @total nodos'),
+      'error_message' => t('Se ha producido un error.')
+    );
+
+    $query = db_select('node', 'n');
+    $query->fields('n', array('nid', 'title', 'vid'));
+    $query->condition('n.type', 'argentinagobar_migtram', '=');
+    $query->condition('n.status', 1, '=');
+    $query->leftJoin('field_data_field_flag', 'ff', 'n.vid = ff.revision_id');
+    $query->isNull('ff.field_flag_value');
+    $query->orderBy('n.nid', 'ASC');
+    $query->range(0, $cantidad);
+
+    $results = $query->execute()->fetchAll();
+
+    // Tomo el archivo CSV con las referencias a campos y vinculados en el primer row al nid del nodo de la migración de tramite. Separados por puntos y comas. Utilizar los machine name como los headers de las columnas
+    // Ej: El ejemplo siguiente importará en el nuevo nodo proveniente del nid 333 la modalidad "100% digital" en el nuevo servicio X
+    // ID;modalidad
+    // 333;100% digital
+    $array = array_map('_obtenerCSV', file(drupal_get_path('module', 'argentinagobar_migtram').'/data/procesos_servicio.csv'));
+    $header = array_shift($array);
+    array_walk($array, '_combinarArray', $header);
+    foreach ($array as $key => $value) {
+        $newArray[$value[$header[0]]] = $value;
+        unset($newArray[$value[$header[0]]][$header[0]]);
+    }
+
+    // Comprueba que todos los campos de servicios están creados y que tenes permisos
+    argentinagobar_migtram_comprobacionDelContenido();
+
+    // Al result agrego la propiedad con los campos relacionados por el csv
+    foreach ($results as $result) {
+
+      if(isset($newArray[$result->nid])){
+        $result->csv = $newArray[$result->nid];         
+      }
+      else{
+        $result->csv = array();
+        // crear log del error.
+        // write_log('No se encuentra indice NID en newArray ($newArray[$result->nid]). Para el nid: '.$result->nid, 'Error Pre-Batch');
+        // continue;
+      }
+
+      $batch['operations'][] = array('argentinagobar_migtram_batch_paso1_process', array($result));
+    }
+
+    batch_set($batch);
+  }
+
+  /**
+  * PASO 1 - Migrar Process
+  */
+  function argentinagobar_migtram_batch_paso1_process($result, &$context) {
+
+    $context['message'] = 'Cargando <b>'.$result->title.'</b> en Servicios';
+    
+    if(!isset($context['results']['mensajes'])){$context['results']['mensajes']='';}
+
+    // Linea del csv que trae los campos extras agregados por el área Procesos
+    $csv = $result->csv;
+
+    if (!empty($csv)){
+      $context['results']['mensajes'].= print_r($csv, true);
+    }
+    $context['results']['mensajes'].= '<hr><div><b>Abre '.$result->title.'</b></div>';
+
+    $oldNode = node_load($result->nid);
+    _msjCarga('Carga viejo nodo <b>'.l( $result->nid, 'node/'.$result->nid.'/edit').'</b>',$context);
+
+    _cambiarEstadoFlag($oldNode, 1, $context);
+
+    // Prepara el nuevo nodo
+    $node = _crearServicio($result->title);
+    _msjCarga('Prepara el node servicio para crearlo',$context);
+    $lg = 'und';
+
+    // Agrega el body del viejo nodo
+    $node->body[$lg][0]['value'] = $oldNode->body[$lg][0]['value'];
+    $node->body[$lg][0]['summary'] = $oldNode->body[$lg][0]['summary'];
+    $node->body[$lg][0]['format'] = $oldNode->body[$lg][0]['format'];
+
+    write_log('','');
+    write_log(' ---------------------------------- ',' ------------------------------- NODE: '.$result->nid);
+
+    // Agrega la relación al área
+    _agregarArea($node, $oldNode, $context);
+    write_log('OK ','_agregarArea');
+    write_log('','');
+
+    _cambiarEstadoEsMigrado($node, 1, $context);
+
+    // Agrega los archivos a downloads
+    _agregarDownloads($node, $oldNode, $context);
+
+    // Agrega el campo simple 'servicio_categoría'
+    _agregarCampo('servicio_categoria', $node, $oldNode, $context);//sleep(1);
+
+    // Agrega los campos que van en field collections
+    _agregarCampoFC('migtram_requisitos', array('requisitos_collection', 'requisito'), $node, $oldNode, $context, $result->nid);
+    _agregarCampoFC('migtram_comosehace', array('pasos', 'paso'), $node, $oldNode, $context, $result->nid);
+    _agregarCampoFC('migtram_quienpuede', array('dirigido', 'detalle'), $node, $oldNode, $context, $result->nid);
+    _agregarCampoFC('migtram_vigencia',   array('vigencia', 'observaciones'), $node, $oldNode, $context, $result->nid);
+
+    // Agrega oficina por ser campo obligatorio warning dejo espacio por lista
+    // $node->field_oficina[$lg][0]['value'] = 'otra';
+
+    // Agrega herencia del nodo
+    $node->field_id_migracion[$lg][0]['value'] = $result->nid;
+
+    // Agrega herencia del nodo
+    $node->field_informacion_adicional[$lg][0]['format'] = 'full_html';
+    $node->field_informacion_adicional[$lg][0]['value'] = _agregaFieldsSobrantes($oldNode);
+
+    // Comprueba los campos del excel
+    if (!empty($csv)){
+
+        _agregarCampoCSV('transaccion_tipo', $node, $csv, $context);
+        _agregarCampoCSV('digitalizacion_medir', $node, $csv, $context);
+        _agregarCampoCSV('digitalizacion_observacion', $node, $csv, $context);
+        _agregarCampoCSV('descargas_obligatorias', $node, $csv, $context);
+        _agregarCampoCSV('formulario_digital', $node, $csv, $context);
+        _agregarCampoCSV('turno_requerido', $node, $csv, $context);
+        _agregarCampoCSV('turno_digital', $node, $csv, $context);
+        _agregarCampoCSV('identificacion_digital', $node, $csv, $context);
+        _agregarCampoCSV('posee_notificaciones', $node, $csv, $context);
+        _agregarCampoCSV('notificaciones', $node, $csv, $context);
+        _agregarCampoCSV('pago_requerido_list', $node, $csv, $context);
+        _agregarCampoCSV('pago_electronico_list', $node, $csv, $context);
+        _agregarCampoCSV('resumen_nivel', $node, $csv, $context);
+        _agregarCampoCSV('relevamiento_observaciones', $node, $csv, $context);
+        _agregarCampoCSV('recomendacion', $node, $csv, $context);
+        
+        $csv['relevamiento_observaciones'] .= !empty($csv['recomendacion']) ? "\r\n\r\nRecomendación\r\n".$csv['recomendacion'] : '';
+        $csv['relevamiento_observaciones'] .= !empty($csv['observacion_recomendacion']) ? "\r\n\r\nObservación Rcomendación\r\n".$csv['observacion_recomendacion'] : '';
+        $csv['relevamiento_observaciones'] .= !empty($csv['texto_servicio']) ? "\r\n\r\nTexto servicio\r\n".$csv['texto_servicio'] : '';
+        $csv['relevamiento_observaciones'] .= !empty($csv['cat1']) ? "\r\n\r\nCat 1\r\n".$csv['cat1'] : '';
+        $csv['relevamiento_observaciones'] .= !empty($csv['cat2']) ? "\r\n\r\nCat 2\r\n".$csv['cat2'] : '';
+        $csv['relevamiento_observaciones'] .= !empty($csv['cat3']) ? "\r\n\r\nCat 3\r\n".$csv['cat3'] : '';
+        $csv['relevamiento_observaciones'] .= !empty($csv['cat4']) ? "\r\n\r\nCat 4\r\n".$csv['cat4'] : '';
+
+        _agregarCampoCSV('relevamiento_observaciones', $node, $csv, $context);
+
+    }
+
+
+    // Estos campos los trato con una función distinta porque tengo que hacer bastante parseo
+    _agregarAcciones($node, $oldNode, $context);
+
+    // Estos campos los trato con una función distinta porque tengo que hacer bastante parseo
+    _agregarCosto($node, $oldNode, $context);
+
+    // despublico nodo nuevo
+    _despublicarNode($node, $context);
+
+    $node = node_submit($node, $context); // Prepare node for saving
+    node_save($node);
+
+    _msjCarga('Se crea el nodo <b>'.l($node->nid, 'node/'.$node->nid.'/edit').'</b>',$context);
+  }
+
+  /**
+  * PASO 2 - Pre Process - Batch html to md
+  */
+  function argentinagobar_migtram_fixes_htmlToMd_batch() {
+
+    // Defino las opciones del batch que utiliza la funcion nativa de Drupal
+    $batch = array(
+      'operations' => array(),
+      'finished' => 'argentinagobar_migtram_batch_finished',
+      'title' => t('Fix Html to MD'),
+      'init_message' => t('Iniciando Fix...'),
+      'progress_message' => t('Procesados @current de @total nodos'),
+      'error_message' => t('Se ha producido un error.')
+    );
+
+    $query = db_select('node', 'n');
+    $query->fields('n', array('nid', 'title', 'vid'));
+    $query->fields('im', array('field_id_migracion_value'));
+    $query->join('field_data_field_es_migrado', 'em', 'n.vid = em.revision_id');
+    $query->join('field_data_field_id_migracion', 'im', 'em.revision_id = im.revision_id');
+    $query->leftJoin('field_data_field_flag', 'ff', 'n.vid = ff.revision_id');
+    $query->condition('em.field_es_migrado_value', 1, '=');
+    $query->orderBy('n.nid', 'ASC');
+
+    $results = $query->execute()->fetchAll();
+
+    $posicion = 0;
+
+    foreach ($results as $result) {
+      $id = $result->nid;
+      $posicion++;
+      $batch['operations'][] = array('argentinagobar_migtram_fixes_htmlToMd', array($id, $posicion));
+    }
+
+    batch_set($batch);
+  }
+
+   /**
+  * PASO 2 - Pre Pre Process - Batch quitar nodos
+  */
+  function argentinagobar_migtram_fixes_quitarNodos_batch() {
+
+    // Defino las opciones del batch que utiliza la funcion nativa de Drupal
+    $batch = array(
+      'operations' => array(),
+      'finished' => 'argentinagobar_migtram_batch_finished',
+      'title' => t('Fix Quitar Nodos'),
+      'init_message' => t('Iniciando Fix...'),
+      'progress_message' => t('Procesados @current de @total nodos'),
+      'error_message' => t('Se ha producido un error.')
+    );
+
+    $nodos_quitar = "35140,35143,35147,35200,36885,39183,39189,39192,40392,40611,40614,40671,41214,41220,41226,41232,41235,41241,41244,41256,41259,41265,41271,41274,41277,41280,41289,41292,41298,41307,41310,41334,41337,41340,41346,41358,41361,41364,41367,41370,41373,41376,41379,41406,41646,41649,41652,41655,41658,41661,41667,41670,41673,41676,41679,41682,41685,41688,41703";
+
+    // $nodos_quitar = "1414,1386,381,6734,6826,7175,7007,6627,6914,6794,34954,34313,34172,34049,7201,7043,33931,33749,7005,33703,33640,33611,979,1340,7202,7045,992,7198,7128,34297,6502,6366,34285,6661,34199,34147,6937,7046,34061,7260,33944,988,6789,1385,6752,6632,6939,7004,6834,7016,6764,991,6779,6662,6386,6737,20,19,18";
+
+    $results = explode(',', $nodos_quitar);
+
+    $posicion = 0;
+    foreach ($results as $nodeId) {
+      $posicion++;
+      $batch['operations'][] = array('argentinagobar_migtram_fixes_quitarNodos', array($nodeId, $posicion));
+    }
+
+    batch_set($batch);
+  }
+
+
+  /**
+  * PASO 2 - Pre Pre Process Nodos Quitar
+  *
+  */
+  function argentinagobar_migtram_fixes_quitarNodos($nodeId, $posicion, &$context){
+    $context['message'] = 'Fix Quitar Nodo para el node: <b>'.$nodeId.'</b>';
+    if(!isset($context['results']['mensajes'])){$context['results']['mensajes']='';}
+
+
+    $node = node_load($nodeId);
+    if($node->field_es_migrado['und'][0]['value'] == 3){
+      write_log_paso2('Migracion Tramites', 'Paso 2: Quitar Node => El Node '.$nodeId.' ya fue quitado del proceso de migracion');
+      _msjCarga('El Node '.$nodeId.' ya fue quitado del proceso de migracion.', $context);
+    }
+    else{
+      _cambiarEstadoEsMigrado($node, 3, $context);
+      write_log_paso2('Migracion Tramites', 'Paso 2: Quitar Node => El Node '.$nodeId.' se quita proceso de migracion');
+      _msjCarga('Se quito el Node '.$nodeId.' del proceso de migracion.', $context);
+    }
+  }
+
+
+  /**
+  * PASO 2 - Pre Process html to md
+  *
+  */
+  function argentinagobar_migtram_fixes_htmlToMd($nodeId, $posicion, &$context){
+    
+    $context['message'] = 'Fix Html to Md para el node: <b>'.$nodeId.'</b>';
+    if(!isset($context['results']['mensajes'])){$context['results']['mensajes']='';}
+    
+    $format_html = 'full_html';
+    $format_md = 'filtered_html';
+    
+    write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId. ' numero: '.$posicion);
+    $node         = node_load($nodeId);
+    $node_wrapper = entity_metadata_wrapper('node', $nodeId);
+    
+    if($node){
+    
+      $campos = '';
+
+      // body
+      $body = $node_wrapper->body->value();
+      if($body['format'] == $format_html){
+      
+        $node->body['und'][0]['value']  = htmlToMd($body['value']);
+        $node->body['und'][0]['format'] = $format_md;
+  
+        write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => body.');
+        $campos .= 'body, ';
+      }
+
+      // pasos items
+      $faso_collection = $node_wrapper->field_pasos->value();
+      $faso_collection_item = entity_metadata_wrapper('field_collection_item', $faso_collection);
+
+      if(isset($faso_collection_item->field_paso)){
+        foreach ($faso_collection_item->field_paso as $key => $pasoCollection) {
+          $paso = $pasoCollection->value();
+
+          if($paso['format'] == $format_html){
+
+            $faso_collection_item->field_paso[$key] = array(
+              'value' => htmlToMd($paso['value']),
+              'format' => $format_md
+            );
+
+            write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => faso - items.');
+            $campos .= 'fasos items, ';
+          }
+        }
+      }
+
+      // // pasos observaciones
+      if(isset($faso_collection_item->field_observaciones)){
+        if($faso_collection_item->field_observaciones->value()['format'] == $format_html){
+
+          $faso_collection_item->field_observaciones = array(
+            'value' => htmlToMd($faso_collection_item->field_observaciones->value()['value']),
+            'format' => $format_md
+          );
+
+          write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => faso - observaciones.');
+          $campos .= 'fasos observaciones, ';
+        }
+
+        $faso_collection_item->save();
+      }
+
+
+      // requisitos items
+      $requisitos_collection = $node_wrapper->field_requisitos_collection->value();
+      $requisito_collection_item = entity_metadata_wrapper('field_collection_item', $requisitos_collection);
+
+      if(isset($requisito_collection_item->field_requisito)){
+        foreach ($requisito_collection_item->field_requisito as $key => $requisitoCollection) {
+          $requisito = $requisitoCollection->value();
+
+          if($requisito['format'] == $format_html){
+
+            $requisito_collection_item->field_requisito[$key] = array(
+              'value' => htmlToMd($requisito['value']),
+              'format' => $format_md
+            );
+
+            write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => requisitos - items.');
+            $campos .= 'requisitos items, ';
+          }
+        }
+      }
+
+      // requisitos observaciones
+      if(isset($requisito_collection_item->field_observaciones)){
+        if($requisito_collection_item->field_observaciones->value()['format'] == $format_html){
+
+          $requisito_collection_item->field_observaciones = array(
+            'value' => htmlToMd($requisito_collection_item->field_observaciones->value()['value']),
+            'format' => $format_md
+          );
+
+          write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => requisitos - observaciones.');
+          $campos .= 'requisitos observaciones, ';
+        }
+
+        $requisito_collection_item->save();
+      }
+
+      // acciones
+      $acciones_collection = $node_wrapper->field_acciones->value();
+
+      foreach ($acciones_collection as $entitiAccion) {
+        $accion_collection_item = entity_metadata_wrapper('field_collection_item', $entitiAccion);
+
+        if(isset($entitiAccion->field_detalle['und'])){
+          if($entitiAccion->field_detalle['und'][0]['format'] == $format_html){
+            $accion_collection_item->field_detalle = array(
+              'value' => htmlToMd($entitiAccion->field_detalle['und'][0]['value']),
+              'format' => $format_md
+            );
+
+            write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => acciones - item raro.');
+            $campos .= 'acciones item raro, ';
+          }
+
+          $accion_collection_item->save();
+        }
+      }
+
+      // costo
+      $costo_collection = $node_wrapper->field_costo->value();
+      $costo_collection_item = entity_metadata_wrapper('field_collection_item', $costo_collection);
+      
+      if(isset($costo_collection_item->field_valor)){
+        foreach ($costo_collection_item->field_valor as $entiticosto) {
+
+          $costo = $entiticosto->value();
+          $costo_valor_collection_item = entity_metadata_wrapper('field_collection_item', $costo);
+         
+          if(isset($costo->field_detalle['und'])){
+            if($costo->field_detalle['und'][0]['format'] == $format_html){
+              
+              $costo_valor_collection_item->field_detalle = array(
+                'value' => htmlToMd($costo->field_detalle['und'][0]['value']),
+                'format' => $format_md
+              );
+
+              write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => costo - item.');
+              $campos .= 'costo item, ';
+            }
+
+            $costo_valor_collection_item->save();
+          }
+        }
+      }
+
+
+      // costo observaciones
+      if(isset($costo_collection_item->field_observaciones)){
+        if($costo_collection_item->field_observaciones->value()['format'] == $format_html){
+
+          $costo_collection_item->field_observaciones = array(
+            'value' => htmlToMd($costo_collection_item->field_observaciones->value()['value']),
+            'format' => $format_md
+          );
+
+          write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => costo - observaciones.');
+          $campos .= 'costo observaciones, ';
+        }
+
+        $costo_collection_item->save();
+      }
+
+      //dirigido detalle
+      $dirigido_collection = $node_wrapper->field_dirigido->value();
+      $dirigido_collection_item = entity_metadata_wrapper('field_collection_item', $dirigido_collection);
+
+      if(isset($dirigido_collection_item->field_detalle)){
+        if($dirigido_collection_item->field_detalle->value()['format'] == $format_html){
+
+          $dirigido_collection_item->field_detalle = array(
+            'value' => htmlToMd($dirigido_collection_item->field_detalle->value()['value']),
+            'format' => $format_md
+          );
+
+          write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => dirigido - detalle.');
+          $campos .= 'dirigido detalle, ';
+        }
+      }
+
+      // dirigido observaciones
+      if(isset($dirigido_collection_item->field_observaciones)){
+        if($dirigido_collection_item->field_observaciones->value()['format'] == $format_html){
+
+          $dirigido_collection_item->field_observaciones = array(
+            'value' => htmlToMd($dirigido_collection_item->field_observaciones->value()['value']),
+            'format' => $format_md
+          );
+
+          write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => dirigido - observaciones.');
+          $campos .= 'dirigido observaciones, ';
+        }
+
+        $dirigido_collection_item->save();
+      }
+
+      // vigencia
+      $vigencia_collection = $node_wrapper->field_vigencia->value();
+      $vigencia_collection_item = entity_metadata_wrapper('field_collection_item', $vigencia_collection);
+
+      if(isset($vigencia_collection_item->field_vigencia_campos)){
+        foreach ($vigencia_collection_item->field_vigencia_campos as $entitivigencia) {
+
+          $vigencia = $entitivigencia->value();
+          $vigencia_valor_collection_item = entity_metadata_wrapper('field_collection_item', $vigencia);
+          
+          if(isset($vigencia->field_detalle['und'])){
+            if($vigencia->field_detalle['und'][0]['format'] == $format_html){
+              
+              $vigencia_valor_collection_item->field_detalle = array(
+                'value' => htmlToMd($vigencia->field_detalle['und'][0]['value']),
+                'format' => $format_md
+              );
+
+              write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => vigencia - item.');
+              $campos .= 'vigencia item, ';
+            }
+
+            $vigencia_valor_collection_item->save();
+          }
+        }
+      }
+
+      // vigencia observaciones
+      if(isset($vigencia_collection_item->field_observaciones)){
+        if($vigencia_collection_item->field_observaciones->value()['format'] == $format_html){
+
+          $vigencia_collection_item->field_observaciones = array(
+            'value' => htmlToMd($vigencia_collection_item->field_observaciones->value()['value']),
+            'format' => $format_md
+          );
+
+          write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => vigencia - observaciones.');
+          $campos .= 'vigencia observaciones, ';
+        }
+
+        $vigencia_collection_item->save();
+      }
+
+      // duracion
+
+      $duracion_collection = $node_wrapper->field_duracion->value();
+      $duracion_collection_item = entity_metadata_wrapper('field_collection_item', $duracion_collection);
+
+      if(isset($duracion_collection_item->field_cantidades)){
+        foreach ($duracion_collection_item->field_cantidades as $entitiduracion) {
+
+          $duracion = $entitiduracion->value();
+          $duracion_valor_collection_item = entity_metadata_wrapper('field_collection_item', $duracion);
+
+          if($duracion->field_detalle['und'][0]['format'] == $format_html){
+            
+            $duracion_valor_collection_item->field_detalle = array(
+              'value' => htmlToMd($duracion->field_detalle['und'][0]['value']),
+              'format' => $format_md
+            );
+
+            write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => vigencia - item.');
+            $campos .= 'vigencia item, ';
+          }
+
+          $duracion_valor_collection_item->save();
+        }
+      }
+
+      // duracion observaciones
+      if(isset($duracion_collection_item->field_observaciones)){
+        if($duracion_collection_item->field_observaciones->value()['format'] == $format_html){
+
+          $duracion_collection_item->field_observaciones = array(
+            'value' => htmlToMd($duracion_collection_item->field_observaciones->value()['value']),
+            'format' => $format_md
+          );
+
+          write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => duracion - observaciones.');
+          $campos .= 'duracion observaciones, ';
+        }
+
+        $duracion_collection_item->save();
+      }
+
+      // informacion adicional
+      $informacion_adicional = $node_wrapper->field_informacion_adicional->value();
+
+      if($informacion_adicional['format'] == $format_html){
+      
+        $node->field_informacion_adicional['und'][0]['value']  = htmlToMd($informacion_adicional['value']);
+        $node->field_informacion_adicional['und'][0]['format'] = $format_md;
+  
+        write_log_paso2('Migracion Tramites', 'Paso 2: Html to Md. Node '.$nodeId.' HTML to MD => informacion_adicional.');
+        $campos .= 'informacion_adicional, ';
+      }
+
+
+
+
+      if($campos != ''){
+        $campos = substr($campos, 0, -2);
+        _msjCarga('El Node: '.$nodeId.' Se migro de HTML a MD, los campos: '.$campos, $context);
+      }
+      else{
+        _msjCarga('Sin Cambios de Html to MD para el nodo: '.$nodeId, $context);
+      }
+
+      $node = node_submit($node, $context);
+      node_save($node);
+    }
+    else{
+      drupal_set_message("El nodo: ".$nodeId.". No es un nodo valido.", 'error');
+      watchdog('Migracion Tramites', 'Paso 2: html to Md. Node '.$nodeId.' HTML to MD => body.', $variables = array(), WATCHDOG_ERROR, $link = NULL);
+      write_log_paso2('Migracion Tramites', 'Paso 2: Fixes. Node '.$nodeId.' No ses un nodo valido.   ERROR');
+    }
+  }
+
+  /**
+  * PASO 2 - Fixes Batch
+  */
+  function argentinagobar_migtram_fixes_batch($json, $desde, $hasta){
+    
+    // Defino las opciones del batch que utiliza la funcion nativa de Drupal
+    $batch = array(
+      'operations' => array(),
+      'finished' => 'argentinagobar_migtram_batch_finished',
+      'title' => t('Fixes'),
+      'init_message' => t('Iniciando Fix...'),
+      'progress_message' => t('Procesados @current de @total nodos'),
+      'error_message' => t('Se ha producido un error.')
+    );
+
+    if(!$json){
+      drupal_set_message('Json Vacio', 'error');
+    }
+
+    $JsonDecode = json_decode($json, true);
+
+    $valorInicio = 1;
+    $valorMaximo = count($JsonDecode);
+
+    if($desde != 0 || $hasta != 0){
+      
+      if($hasta >= $desde){
+        // valido desde
+        if(!validarRango($desde, $valorInicio, $valorMaximo)){
+          return drupal_set_message("El campo Desde, valor: ".$desde.". Tiene que ser un valor entre: ".$valorInicio." y ".$valorMaximo.".", 'error');
+        }
+        // validao hasta
+        if(!validarRango($hasta, $valorInicio, $valorMaximo)){
+          return drupal_set_message("El campo Hasta, valor: ".$hasta.". Tiene que ser un valor entre: ".$valorInicio." y ".$valorMaximo.".", 'error');
+        }
+      }
+      else{
+        return drupal_set_message("El campo Desde, valor: ".$desde.". Tiene que ser menor o igual al campo Hasta: ".$hasta, 'error');
+      }
+    }
+    else{
+      $desde = $valorInicio;
+      $hasta = $valorMaximo;
+    }
+
+    _msjCarga('Paso 2: Fixes - Se fixearon estos Nodos:', $context);
+    $actual = 1;
+    foreach ($JsonDecode as $nodeId => $textoServicio) {
+
+      if($actual >= $desde && $actual <= $hasta){
+        $node = node_load($nodeId);
+
+        if($node){
+
+          $batch['operations'][] = array('argentinagobar_migtram_fixes_process', array($node, $textoServicio));
+
+          write_log_paso2('Migracion Tramites', 'Paso 2: Fixes. Node '.$nodeId.' fixeado. (posicion: '.$actual.')');
+        }
+        else{
+          drupal_set_message("El nodo: ".$nodeId.". No es un nodo valido.", 'error');
+          watchdog('Migracion Tramites', 'Paso 2: Fixes. El nodo: '.$nodeId.'. No es un nodo valido', $variables = array(), WATCHDOG_ERROR, $link = NULL);
+          write_log_paso2('Migracion Tramites', 'Paso 2: Fixes. Node '.$nodeId.' No ses un nodo valido.   ERROR');
+        }
+      }
+      $actual++;
+    }
+
+    batch_set($batch);
+
+  }
+
+  /**
+  * PASO 2 - Fixes Process
+  */
+  function argentinagobar_migtram_fixes_process($node, $textoServicio, &$context){
+    $nodeId = $node->nid;
+    $context['message'] = 'Fixes para el node: <b>'.$nodeId.'</b>';
+    if(!isset($context['results']['mensajes'])){$context['results']['mensajes']='';}
+
+    write_log_paso2('Migracion Tramites', 'Paso 2: Fixes => Node '.$nodeId);
+
+    fixTextoServicio($node, $textoServicio);
+    fixRequiereTurno($node);
+    fixBorrarNodosDuplicados($node);
+    _cambiarEstadoEsMigrado($node, 2, $context);
+  }
+
+  /**
+  * PASO 2 - Fixes Faltantes Process
+  */
+  function argentinagobar_migtram_fixes_faltantes_process($json, $desde, $hasta){
+
+    $query = db_select('node', 'n');
+    $query->fields('n', array('nid', 'title', 'vid'));
+    $query->fields('im', array('field_id_migracion_value'));
+    $query->join('field_data_field_es_migrado', 'em', 'n.vid = em.revision_id');
+    $query->join('field_data_field_id_migracion', 'im', 'em.revision_id = im.revision_id');
+    $query->leftJoin('field_data_field_flag', 'ff', 'n.vid = ff.revision_id');
+    $query->condition('em.field_es_migrado_value', 1, '=');
+    $query->orderBy('n.nid', 'ASC');
+
+    $results = $query->execute()->fetchAll();
+
+    drupal_set_message("La cantidad de nodos faltantes son: ".count($results), 'warning');
+    
+    $mensaje = '{<br/>';
+
+    write_log_paso2_no_relevados('-----------------------------------');
+    write_log_paso2_no_relevados('MT - Paso 2: Faltantes');
+    write_log_paso2_no_relevados('-----------------------------------');
+    
+    foreach ($results as $nodoFaltante) {
+
+      $node = node_load($nodoFaltante->nid);
+  
+      if($node){
+  
+        $node_wrapper = entity_metadata_wrapper('node', $node);
+        $nodeIdViejo = $node_wrapper->field_id_migracion->value();
+
+        $path = path_load('node/'.$node->nid);
+        $dateUnix = $node_wrapper->created->value();
+        $fecha = new DateTime("@$dateUnix");
+
+        write_log_paso2_no_relevados($node->nid.','.$path['alias'].','.$nodeIdViejo);
+
+        $mensaje .= '"'.$node->nid.'":"",<br/>';
+      }
+      else{
+        drupal_set_message("El nodo: ".$nodoFaltante->nid." no existe", 'error');
+      }
+    }
+
+    $mensaje = substr($mensaje, 0, -6);
+    $mensaje .= '<br/>}';
+
+    return drupal_set_message($mensaje, 'warning');
+  }
+
+  /**
+  * PASO 3 - Publicar batch
+  */
+  function argentinagobar_migtram_batch_publish($cantidad) {
+
+    $batch = array(
+      'operations' => array(),
+      'finished' => 'argentinagobar_migtram_batch_finished',
+      'title' => t('Publica <b>Nodo Migrado</b>, despulica <b>Nodo Viejo</b>'),
+      'init_message' => t('Comienzando paso 3 - Publicacion'),
+      'progress_message' => t('Procesados @current de @total nodos'),
+      'error_message' => t('Se ha producido un error.')
+    );
+
+    $query = db_select('node', 'n');
+    $query->fields('n', array('nid', 'title', 'vid'));
+    $query->fields('im', array('field_id_migracion_value'));
+    $query->join('field_data_field_es_migrado', 'em', 'n.vid = em.revision_id');
+    $query->join('field_data_field_id_migracion', 'im', 'em.revision_id = im.revision_id');
+    $query->condition('em.field_es_migrado_value', 2, '=');
+    $query->orderBy('n.nid', 'ASC');
+    $query->range(0, $cantidad);
+
+    $results = $query->execute()->fetchAll();
+
+    foreach ($results as $result) {
+      $batch['operations'][] = array('argentinagobar_migtram_batch_publish_process', array($result));
+    }
+
+    batch_set($batch);
+  }
+
+  /**
+  * PASO 3 - Publicar Process
+  */
+  function argentinagobar_migtram_batch_publish_process($result, &$context) {
+
+    $context['message'] = 'Cargando <b>'.$result->title.'</b> ... ';
+    if(!isset($context['results']['mensajes'])){$context['results']['mensajes'] = '';}
+
+    $context['results']['mensajes'].= '<hr><div><b>Inicializando Paso 3 para:  '.$result->title.'</b></div></br>';
+    write_log_paso3('','-----------------------------------------------------------------');
+    write_log_paso3('MT - Paso 3: Publicar', 'Inicializando Paso 3 para el servicio:  '.$result->title);
+
+    $nodeIdNuevo = $result->nid;
+    $nodeIdViejo = $result->field_id_migracion_value;
+
+    // cargo los nodos, viejo y nuevo
+    $nodeNew = node_load($nodeIdNuevo);
+    $nodeOld = node_load($nodeIdViejo);
+
+    _msjCarga('Node Nuevo: '.$nodeIdNuevo, $context);
+    _msjCarga('Node Viejo: '.$nodeIdViejo, $context);
+
+    write_log_paso3('MT - Paso 3: Publicar', 'El Nodo: '.$nodeIdNuevo.', estado es-migrado: 2');
+
+    if($nodeNew->status == 1){
+      write_log_paso3('MT - Paso 3: Publicar', 'El Nodo: '.$nodeIdNuevo.', ya estaba publicado.');
+      _msjCarga('</br> El Nodo: '.$nodeIdNuevo.', ya estaba publicado.' ,$context);
+    }
+    else{
+      // despublico nodo viejo
+      _despublicarNode($nodeOld, $context);
+      write_log_paso3('MT - Paso 3: Publicar', 'El nodo viejo: '.$nodeIdViejo.' fue despublicado.');
+      
+      //Publica el nodo nuevo
+      _publicarNode($nodeNew, $context);
+      write_log_paso3('MT - Paso 3: Publicar', 'El nodo nuevo: '.$nodeIdNuevo.' fue publicado.');
+
+      // redirect y alias
+      _redireccion_y_alias_Nodos($result, $context);
+    }
+
+    _cambiarEstadoEsMigrado($nodeNew, 3, $context);
+    _msjCarga('</br> El Nodo: '.$nodeIdNuevo.', estado es-migrado a: <b>3</b>' ,$context);
+    
+    $path_viejo   = path_load('node/'.$result->field_id_migracion_value);
+    $path = path_load('node/'.$result->nid);
+
+    write_log_paso3('path viejo: '.$path_viejo['alias']);
+    write_log_paso3('path nuevo: '.$path['alias']);
+
+    write_log_paso3('============================================================');
+
+    _msjCarga('</br><b>Fin</b> del Paso 3 para el nodo: '.l($nodeIdNuevo, 'node/'.$nodeIdNuevo.'/edit'), $context);
+  }
+
+  /**
+  * PASO - Re-Migrar Nodo Form
+  */
+  function argentinagobar_migtram_re_migrar_process($node_remigrate) {
+
+    $node         = node_load($node_remigrate);
+    $node_wrapper = entity_metadata_wrapper('node', $node);
+
+    $flag = $node_wrapper->field_flag->value();
+    $flag = is_null($flag) ? 'null' : $flag;
+
+    $node_wrapper->field_flag->set(null);
+    $node_wrapper->save();
+
+    $flagNew = $node_wrapper->field_flag->value();
+    $flagNew = is_null($flagNew) ? 'null' : $flagNew;
+
+    logar("El nodo: ".$node_remigrate. " fue re-seteado para poder ser migrado en el paso 1");
+    drupal_set_message("El nodo: ".$node_remigrate. " fue re-seteado para poder ser migrado en el paso 1");
+  }
+
+
+  // Manejador del final del batch donde te muestra el resultado del proceso
+  function argentinagobar_migtram_batch_finished($success, $results, $operations) {
+    if ($success) {
+      if (empty($message)) { $message = ''; }
+      $message .= $results['mensajes'];
+      variable_set('migracion', $results);
+      drupal_set_message($message);
+    } else {
+      $error_operation = reset($operations);
+      $message = t('An error occurred while processing %error_operation with arguments: @arguments', array(
+          '%error_operation' => $error_operation[0],
+          '@arguments' => print_r($error_operation[1], TRUE)
+          ));
+      drupal_set_message($message, 'error');
+    }
+  }
+
+
+  /**
+  *
+  * INICIO DE FUCIONES PARA MIGRACION DE TRAMITES
+  *
+  */
+
+
+  function fixTextoServicio($node, $textoServicio){
+
+    $node_wrapper = entity_metadata_wrapper('node', $node);
+    $node_wrapper->field_texto_servicio->set($textoServicio);
+    $node_wrapper->save();
+    
+    drupal_set_message("El campo text-servicio del nodo: ".$node->nid. " se actualizo con el texto: ".$textoServicio);
+  }
+
+  function fixBorrarNodosDuplicados($node){
+    
+    $node_wrapper = entity_metadata_wrapper('node', $node);
+    $id_migracion = $node_wrapper->field_id_migracion->value();
+    
+    $query = db_select('node', 'n');
+    $query->fields('n', array('nid', 'title', 'vid'));
+    $query->fields('im', array('field_id_migracion_value'));
+    $query->join('field_data_field_es_migrado', 'em', 'n.vid = em.revision_id');
+    $query->join('field_data_field_id_migracion', 'im', 'em.revision_id = im.revision_id');
+    $query->leftJoin('field_data_field_flag', 'ff', 'n.vid = ff.revision_id');
+    $query->condition('em.field_es_migrado_value', 1, '=');
+    $query->condition('im.field_id_migracion_value', $id_migracion, '=');
+    $query->orderBy('n.nid', 'ASC');
+
+    $nodosDuplicados = $query->execute()->fetchAll();
+
+    if(count($nodosDuplicados) > 1){
+
+      // le quito el primer elemento al array
+      array_shift($nodosDuplicados);
+
+      foreach ($nodosDuplicados as $nodoDuplicado) {
+        node_delete($nodoDuplicado->nid);
+        drupal_set_message("Se borro el nodo: ".$nodoDuplicado->nid." que estaba duplicado del nodo original: ".$node->nid);
+      }
+    }
+  }
+
+  function fixRequiereTurno($node){
+
+    $node_wrapper = entity_metadata_wrapper('node', $node);
+
+    // requiere turno viejo
+    $requiereTurnoViejo = $node_wrapper->field_turno_requerido->value();
+
+    switch ((int) $requiereTurnoViejo) {
+      case null:
+        $requiereTurnoNuevo = 4;
+        $textoViejoMensaje = 'Vacio';
+        $textoNuevoMensaje = 'Sin información';
+        break;
+      case 2:
+        $requiereTurnoNuevo = 1;
+        $textoViejoMensaje = 'No';
+        $textoNuevoMensaje = 'No - no aplica turno';
+        break;
+      case 1:
+        $requiereTurnoNuevo = 0;
+        $textoViejoMensaje = 'Si';
+        $textoNuevoMensaje = 'Si';
+        break;
+      default:
+        break;
+    }
+
+    drupal_set_message("
+      Se cambio el valor de Requiere Turno: <br> 
+      Viejo: <b>".$textoViejoMensaje."</b>. <br> 
+      Nuevo: <b>".$textoNuevoMensaje. "</b>. <br>"
+    );
+
+    $node_wrapper->field_lista_requiere_turno->set($requiereTurnoNuevo);
+    $node_wrapper->save();
+  }
+  
+  // funcion para crear el alias redirect al nodo viejo
+  function _redireccion_y_alias_Nodos($result, $context){
+
+    $path_viejo   = path_load('node/'.$result->field_id_migracion_value);
+    // renombro variable
+    $path_viejo_guardo = $path_viejo['alias'];
+    // cambio el nombre de alias viejo
+    $path_viejo['alias'] = $path_viejo['alias'].'-x';
+    path_save($path_viejo);
+
+    $redirectPath = redirect_load('node/'.$result->nid);
+
+    // En caso de necesitar redireccionar el viejo nodo
+    // CREAR EL REDIRECT
+    $redirect = new stdClass();
+    redirect_object_prepare(
+      $redirect,
+      array(
+        'source' => 'node/'.$result->field_id_migracion_value,
+        'source_options' => array(),
+        'redirect' => 'node/'.$result->nid,
+        'redirect_options' => array(),
+        'language' => LANGUAGE_NONE,
+      )
+    );
+
+    redirect_save($redirect);
+
+    _msjCarga('Se configura la redirección de ' . $redirect->source . l(' editar la redirección', 'admin/config/search/redirect/edit/'.$redirect->rid),$context);
+    write_log_paso3('MT - Paso 3: Publicar', 'Se configura la redirección de ' .$redirect->source, $context);
+
+    // Esta línea es la que cambia el path alias la migración original agregaba el sufijo /revision para identificar que el nodo estaba en revisión pero con el nuevo DUF que indica que todos los nodos tienen que migrar instantáneamente cambia a pisar directamente el path
+    // Carga el viejo path alias
+    $path = path_load('node/'.$result->nid);
+
+    // Asigna el viejo path alias al nuevo servicio
+    $path['alias'] = $path_viejo_guardo;
+
+    path_save($path);
+
+    _msjCarga('Se asigna el alias de revision <b>'.l($path['alias'], $path['alias']).'</b>',$context);
+    write_log_paso3('MT - Paso 3: Publicar', 'Se asigna el alias de revision de: '.$result->nid, $context);
+
+  }
+
+  function _despublicarNode($node, $context){
+
+    if(isset($node->status)){
+      $node->status = 0;
+      $node = node_submit($node, $context);
+      node_save($node);
+
+      _msjCarga('El nodo: '.$node->nid.' fue <b>DESPUBLICADO</b>' ,$context);
+    }
+  }
+
+  function _publicarNode($node, $context){
+
+    if(isset($node->status)){
+      $node->status = 1;
+      node_save($node);
+
+      _msjCarga('El nodo: '.$node->nid.' fue <b>PUBLICADO</b>' ,$context);
+    }
+  }
+
+  // En esta función tomaba los campos sobrantes que me preocupaban y los encadenaba
+  function _agregaFieldsSobrantes($result) {
+
+    $response = '';
+    $response .= (!empty($result->field_migtram_asistencias['und'][0]['value'])) ? '<h2>Asistencias</h2>'.$result->field_migtram_asistencias['und'][0]['value'] : '';
+    $response .= (!empty($result->field_migtram_cuando['und'][0]['value'])) ? '<h2>Cuando</h2>'.$result->field_migtram_cuando['und'][0]['value'] : '';
+    $response .= (!empty($result->field_migtram_donde['und'][0]['value'])) ? '<h2>Donde</h2>'.$result->field_migtram_donde['und'][0]['value'] : '';
+    $response .= (!empty($result->field_migtram_tiempo_de_entrega['und'][0]['value'])) ? '<h2>Tiempo de entrega</h2>'.$result->field_migtram_tiempo_de_entrega['und'][0]['value'] : '';
+    $response .= (!empty($result->field_migtram_documento['und'][0]['value'])) ? '<h2>Documento</h2>'.$result->field_migtram_documento['und'][0]['value'] : '';
+    $response .= (!empty($result->field_migtram_carta_compromiso['und'][0]['value'])) ? '<h2>Carta compromiso</h2>'.$result->field_migtram_carta_compromiso['und'][0]['value'] : '';
+    $response .= (!empty($result->field_migtram_observaciones['und'][0]['value'])) ? '<h2>Observaciones</h2>'.$result->field_migtram_observaciones['und'][0]['value'] : '';
+
+    return $response;
+  }
+
+  function _get_tid_from_term_name($term_name, $vocabulary) {
+
+    $terms = taxonomy_get_term_by_name($term_name);
+    if (!empty($terms)) {
+        $first_term = array_shift($terms);
+        return $first_term->tid;
+    }else{
+        $vobj = taxonomy_vocabulary_machine_name_load($vocabulary);
+        $term = new stdClass();
+        $term->name = $term_name;
+        $term->vid = $vobj->vid;
+        taxonomy_term_save($term);
+        $tid = $term->tid;
+        return $tid;
+    }
+  }
+
+  function _crearArea($org_title, $url){
+
+      $node = new stdClass();
+      $node->title = $org_title;
+      $node->type = 'area';
+      node_object_prepare($node);
+      $node->language = 'und';
+      $node->uid = 0;
+      $node->status = 0;
+      $node->promote = 0;
+      $node->comment = 0;
+      $lg = $node->language;
+
+      $node->field_links_relacionados[$lg][0]['title'] = $org_title;
+      $node->field_links_relacionados[$lg][0]['url'] = $url;
+
+      $node = node_submit($node);
+      node_save($node);
+
+      return $node->nid;
+  }
+
+  function _crearServicio($title){
+
+      $node = new stdClass();
+      $node->title = $title;
+      $node->type = 'tramite';
+      node_object_prepare($node);
+      $node->language = 'und';
+      $node->uid = 0;
+      $node->status = 0;
+      $node->promote = 0;
+      $node->comment = 0;
+
+      return $node;
+  }
+
+  function _agregarArea($node, $oldNode, &$context){
+    
+    $organismosNodo = organismosNodo();
+    
+    write_log('Inicio del proceso de agregar un area. ','_agregarArea');
+
+    $lg='und';
+
+    if(!empty($oldNode->field_migtram_organismo)){
+
+      write_log('No esta vacio el -field_migtram_organismo-','_agregarArea');
+
+      // Toma el titulo del campo link de drupal
+      $org_title = trim($oldNode->field_migtram_organismo[$lg][0]['title']);
+
+      write_log('Toma el titulo del campo link de drupal: ->  '.$org_title,'_agregarArea');
+      
+      $context['results']['mensajes'].= '<div>Busca el texto <b>'.$org_title.'</b> en las áreas</div>';
+            
+      write_log('Buscando el texto.','_agregarArea');
+
+      if(array_key_exists($org_title, $organismosNodo) && _validarAreaNode($organismosNodo[$org_title])){
+        
+        write_log('Valide que existe el nodo del Area','_validarAreaNode');
+        
+        $node->og_group_ref[$lg][0]['target_id'] = $organismosNodo[$org_title];
+        $context['message'] = 'Encontró el área/organismo <b>'.$org_title.'</b>';
+        $context['results']['mensajes'].= '<div>Encontró área/organismo <b>'.$org_title.'</b> lo agrega al nodo</div>';
+        
+      } else {
+        write_log('No existe Área referida por organismo.','_agregarArea');
+        watchdog("Migración de Trámites", "No existe Área referida por organismo: " . $org_title, $variables = array(), $severity = WATCHDOG_NOTICE, $link = NULL);
+      }
+    }
+
+    return $node;
+  }
+
+  // funcion para validar que exista un nodo
+  function _validarAreaNode($node){
+
+    $query = db_select('node', 'n');
+    $query->fields('n', array('nid'));
+    $query->condition('n.nid', $node, '=');
+    $results = $query->execute()->fetchAll();
+
+    if(count($results) == 1){
+      return true;
+    }
+    
+    write_log('','');
+    write_log('','');
+    write_log('','');
+    write_log('     ERROR AL VALIDAR EL AREA NODE: '.$node.'  ####################','_validarAreaNode');
+    write_log_error('el area node: '.$node.' no pudo ser validada','_validarAreaNode');
+    write_log('','');
+    write_log('','');
+    write_log('','');
+
+    return false;
+  }
+
+  function _agregarDownloads($node, $oldNode, &$context){
+
+      $lg='und';
+
+      // Downloads
+      if(!empty($oldNode->field_download)){
+          foreach($oldNode->field_download[$lg] as $key => $value) {
+              $node->field_download[$lg][] = $value;
+          }
+          _msjCarga('Carga Downloads', $context);
+      }else{
+          _msjCarga('No hay downloads', $context);
+      }
+
+      // Documentos
+      if(!empty($oldNode->field_migtram_documento)){
+          foreach($oldNode->field_migtram_documento[$lg] as $key => $value) {
+              $node->field_download[$lg][] = $value;
+          }
+          _msjCarga('Carga Documentos', $context);
+      }else{
+          _msjCarga('No hay documentos', $context);
+      }
+
+      return $node;
+  }
+
+  function _agregarCampo($field, $node, $oldNode, &$context){
+
+      $lg='und';
+
+      if(!empty($oldNode->{'field_'.$field})){
+          _msjCarga('Ingresa el campo '.$field.' desde nodo migrado', $context);
+          foreach($oldNode->{'field_'.$field}[$lg] as $key => $value) {
+              $node->{'field_'.$field}[$lg][$key]=$value;
+              _msjCarga('Carga <b>'.taxonomy_term_load($value['tid'])->name.'</b>', $context);
+          }
+      }else{
+          _msjCarga('No se encuentra '.$field.' en nodo migrado', $context);
+      }
+
+      return $node;
+  }
+
+  function _agregarCampoCSV($field, $node, $csv, &$context){
+
+      $lg='und';
+
+      if(!empty($csv[$field])){
+
+          if($field == 'relevamiento_observaciones'){
+            $node->{'field_'.$field}[$lg][0]['value'] = $csv[$field];
+            return $node;
+          }
+
+          $valor = str_replace(array('Á','É','Í','Ó','Ú','Ñ',' '), array('a','e','i','o','u','n','_'), strtolower($csv[$field]));
+          _msjCarga('Ingresa el campo '.$field.' con el valor '.$valor.' desde csv', $context);
+
+          switch($valor){
+            case 'si':
+              $valor = 1;
+            break;
+            case 'si_-_obligatorio':
+              $valor = 'si_obligatorio';
+            break;
+            case 'si_-_segun_opcion':
+              $valor = 1;
+            break;
+            case 'si_-_segun_dependencia':
+              $valor = 1;
+            break;
+            case 'si':
+              $valor = 1;
+            break;
+            case 'no':
+              $valor = 0;
+            break;
+            case 'no_-_no_aplica_turno':
+              $valor = 0;
+            break;
+            case 'sin_informacion':
+              $valor = null;
+            break;
+          }
+
+          $node->{'field_'.$field}[$lg][0]['value'] = $valor;
+      }else{
+          _msjCarga('No se encuentra '.$field.' en csv', $context);
+      }
+
+      return $node;
+  }
+
+  function _agregarCosto($node, $oldNode, &$context){
+
+      $lg='und';
+
+      if(!empty($oldNode->field_migtram_costo)){
+
+          if (strpos($oldNode->field_migtram_costo[$lg][0]['summary'], 'Gratuito') !== false) {
+
+              _msjCarga('Carga costo gratuito', $context);
+
+              _agregarItemCollection($node, 'costo', array('gratuito'=>1));
+
+          }else{
+
+              _msjCarga('Carga costo de texto largo en observaciones', $context);
+              _agregarTextCollection($node, 'costo', array('observaciones'=>$oldNode->field_migtram_costo));
+
+          }
+
+      }
+
+      return $node;
+  }
+
+  function _agregarAcciones($node, $oldNode, &$context){
+
+      $lg='und';
+
+      if(!empty($oldNode->field_migtram_acciones)){
+
+          $acciones = _comprobarAccion($oldNode->field_migtram_acciones[$lg][0]['value']);
+
+          if(!empty($acciones)){
+
+              $field_collection_item = entity_create('field_collection_item', array('field_name' => 'field_acciones'));
+              $field_collection_item->setHostEntity('node', $node);
+
+              $i=0;
+
+              foreach($acciones as $key => $link){
+
+                  $i++;
+
+                  _msjCarga('Carga acción '.$link[1], $context);
+
+                  $field_collection_item->field_url[$lg][$i]['url'] = $link[0];
+                  $field_collection_item->field_accion[$lg][$i]['value'] = _mapeoLinkTitle($link[1], $context); //Warning dejo este espacio por las listas
+              }
+
+              $field_collection_item->save();
+              //sleep(2);
+              $node_field = (empty($node_field)) ? 'acciones' : '';
+              $node->{'field_'.$node_field}[$lg][0]['value'] = $field_collection_item->item_id;
+
+          }
+
+      }
+
+      return $node;
+  }
+
+  // Las acciones cambian de nombre entonces hago el mapeo para poder pegarle a la lista del tipo de contenido
+  function _mapeoLinkTitle($value, &$context){
+
+      $mapeo=array(
+          'bajar-imprimir' => 'descargar_documento',
+          'iniciar-realizar' => 'web_del_tramite',
+          'solicitar-turno' => 'pedir_turno',
+          'consultar' => 'consultar_en_linea',
+          'realizar-la-solicitud-electronica-' => 'web_del_tramite',
+          'descarga-el-formulario' => 'descargar_documento',
+          'iniciar-la-consulta' => 'consultar_en_linea',
+          'realizar-la-solicitud-electronica' => 'web_del_tramite',
+          'descargar-autorizacion-(artículo-6º,-decreto-2004-80)' => 'descargar_documento',
+          'descargar-el-formulario-de-importacion-de-obras-de-arte' => 'descargar_documento',
+      );
+
+      _msjCarga('Se mapea acción '.$value.' a '.$mapeo[$value], $context);
+
+      return $mapeo[$value];
+  }
+
+  function _comprobarAccion($value){
+
+      $value = strip_tags($value, '<a>');
+      $value = str_replace(array('&nbsp;','> '),array('','>'),$value);
+
+      $patron = '/<a(.*)href\s?=\s?["\'](?P<href>[^"\'<>]+)["\'](.*)>(.*)/i';
+      $sust = '$2<;>$4';
+
+      foreach (explode('</a>',$value) as $value){
+
+          if(!empty($value)){
+
+              $expValue = preg_replace($patron, $sust, $value);
+              $newLink = explode('<;>', $expValue);
+              if (strpos($newLink[0], 'sssalud') !== false) {
+                  //echo 'true';
+              }else{
+                  $lk = explode('<;>', $expValue);
+                  if($lk[0]!='/'){
+                      $lk[1]= str_replace(array('/',' ','á','é','í','ó','ú'),array('-','-','a','e','i','o','u'),trim(strtolower($lk[1])));
+                      $lk[1]= str_replace('---','-',$lk[1]);
+                      $link[] = $lk;
+                  }
+              }
+
+
+          }
+
+      }
+
+      return $link;
+  }
+
+  function _agregarCampoFC($oldField, $newField, $node, $oldNode, &$context, $nid){
+
+    if(!empty($oldNode->{'field_'.$oldField})){
+
+      _msjCarga('Migra '.$oldField.' Carga '.$newField[1].' en colección '.$newField[0], $context);
+      _agregarTextCollection($node, $newField[0], array($newField[1]=>$oldNode->{'field_'.$oldField}));
+
+      write_log('Migra '.$oldField.' Carga '.$newField[1].' en colección '.$newField[0], '_agregarCampoFC');
+    }
+  }
+
+  // Agrega un valor a un field collection
+  function _agregarItemCollection($node, $node_field, $c_fields){
+
+      $lg='und';
+
+      $field_collection_item = entity_create('field_collection_item', array('field_name' => 'field_'.$node_field));
+      $field_collection_item->setHostEntity('node', $node);
+
+      foreach($c_fields as $key => $value){
+
+          $field_collection_item->{'field_'.$key}[$lg][0]['value'] = $value;
+
+          if($key=='observaciones'){
+
+              $field_collection_item->{'field_'.$key}[$lg][0]['format'] = 'full_html';
+
+          }
+
+      }
+
+      $field_collection_item->save();
+      $node->{'field_'.$node_field}[$lg][0]['value'] = $field_collection_item->item_id;
+  }
+
+  // Esta funcion era para convertir los pasos de texto plano o HTML a un array para la colección de datos ya no se usa pero queda para revision si se necesita
+  function _parsearPasos($node, &$c_fields, $field_collection_item){
+
+      $string = $c_fields['paso']['und'][0]['value'];
+
+      if (substr_count($string, '1.-') >= 1) {
+
+          $cadena = strip_tags($string,'<br><a><strong><b><i>');
+          $patt = '/[0-9].- (.*)/g';
+          $sust = '$1;;';
+          $repl = trim(preg_replace($patt, $sust, $cadena),';;');
+          $newString = explode(';;', $repl);
+
+          foreach ( $newString as $key => $value ) {
+              $c_fields['paso']['und'][$key]= array(
+                  'value' => $value,
+                  'format' => 'full_html',
+                  'safe_value' => $value
+              );
+          }
+
+
+      }
+
+      if (substr_count($string, '<ol>') == 1 and substr( $string, 0, 4 ) === "<ol>") {
+
+          $cadena = strip_tags($string,'<br><a><strong><b><i><ol><li>');
+
+          preg_match_all('/<ol>(.*)<\/ol>(.*)/', $cadena, $matches, PREG_SET_ORDER);
+
+          array_shift($matches[0]);
+
+          preg_match_all('/<li>(.*?)<\/li>/', $matches[0][0], $list, PREG_SET_ORDER);
+
+          foreach($list as $key => $value){
+
+              $c_fields['paso']['und'][$key]= array(
+                  'value' => $value[1],
+                  'format' => 'full_html',
+                  'safe_value' => $value[1]
+              );
+
+          }
+
+          $field_collection_item->field_observaciones['und'][0]['value'] = $matches[0][1];
+          $field_collection_item->field_observaciones['und'][0]['format'] = 'full_html';
+
+      }
+  }
+
+  //Agrega un campo de texto igual al migrado
+  function _agregarTextCollection($node, $node_field, $c_fields){
+
+    $lg='und';
+
+    $field_collection_item = entity_create('field_collection_item', array('field_name' => 'field_'.$node_field));
+    $field_collection_item->setHostEntity('node', $node);
+
+    write_log('Set Host Entity.','_agregarTextCollection');
+
+    foreach($c_fields as $key => $value){
+
+      $field_collection_item->{'field_'.$key} = $value;
+    }
+
+    $field_collection_item->save();
+    write_log('Save field collection item.','_agregarTextCollection');
+    // Toma el caso especial de los pasos agrega array en caso de ser números correlativos
+
+    $node->{'field_'.$node_field}[$lg][0]['value'] = $field_collection_item->item_id;
+
+    write_log('OK ','_agregarTextCollection');
+    write_log('','');
+  }
+
+  //Agrega una accion
+  function _agregarAccionCollection($node, $node_field, $c_fields){
+
+      $lg='und';
+
+      $field_collection_item = entity_create('field_collection_item', array('field_name' => 'field_'.$node_field));
+      $field_collection_item->setHostEntity('node', $node);
+
+      foreach($c_fields as $key => $value){
+
+          $field_collection_item->{'field_'.$key} = $value;
+
+      }
+
+      $field_collection_item->save();
+      $node->{'field_'.$node_field}[$lg][0]['value'] = $field_collection_item->item_id;
+  }
+
+  function _msjCarga($msj, &$context){
+      if (!isset($context['results']['mensajes'])) { $context['results']['mensajes'] = ''; }
+      $context['results']['mensajes'].= '<div>'.$msj.'</div>';
+  }
+
+  function argentinagobar_migtram_rpte_migrar_servicios() {
+      $informe = variable_get('migracion');
+      return $informe['mensajes'];
+  }
+
+   // cadena = mensaje
+
+  // tipo = tipo de error
+  function write_log($cadena, $tipo){
+    
+    $pathLogs = realpath('./profiles/argentinagobar/modules/argentinagobar/argentinagobar_migtram/data/');
+
+    $arch = fopen($pathLogs."/migrtram_log_".date("Y-m-d").".txt", "a+"); 
+    
+    fwrite($arch, "[".date("Y-m-d H:i:s.u")." ".$_SERVER['REMOTE_ADDR']." - $tipo ] ".$cadena."\n");
+    fclose($arch);
+  }
+
+  function write_log_paso2($tipo, $mensaje){
+    
+    $pathLogs = realpath('./profiles/argentinagobar/modules/argentinagobar/argentinagobar_migtram/data/');
+
+    $arch = fopen($pathLogs."/migrtram_log_PASO_2_FIX_".date("Y-m-d").".txt", "a+"); 
+    
+    fwrite($arch, date("Y-m-d H:i:s")." - $tipo - ".$mensaje."\n");
+    fclose($arch);
+  }
+
+  function write_log_paso2_no_relevados($mensaje){
+    
+    $pathLogs = realpath('./profiles/argentinagobar/modules/argentinagobar/argentinagobar_migtram/data/');
+
+    $arch = fopen($pathLogs."/migrtram_log_PASO_2_No_Relevados_".date("Y-m-d").".txt", "a+"); 
+    
+    fwrite($arch, $mensaje."\n");
+    fclose($arch);
+  }
+
+  function write_log_paso3($tipo, $mensaje = ''){
+    
+    $pathLogs = realpath('./profiles/argentinagobar/modules/argentinagobar/argentinagobar_migtram/data/');
+
+    $arch = fopen($pathLogs."/migrtram_log_PASO_3_".date("Y-m-d").".txt", "a+"); 
+    
+
+
+    fwrite($arch, date("Y-m-d H:i:s")." - $tipo - ".$mensaje."\n");
+    fclose($arch);
+  }
+
+
+
+  function write_log_error($cadena, $tipo){
+    
+    $pathLogs = realpath('./profiles/argentinagobar/modules/argentinagobar/argentinagobar_migtram/data/');
+
+    $arch = fopen($pathLogs."/migrtram_log_errors".date("Y-m-d").".txt", "a+"); 
+    
+    fwrite($arch, "[".date("Y-m-d H:i:s.u")." ".$_SERVER['REMOTE_ADDR']." - $tipo ] ".$cadena."\n");
+    fclose($arch);
+  }
+
+  function _cambiarEstadoEsMigrado($node, $estado, $context){
+
+    $node->field_es_migrado['und'][0]['value'] = $estado;
+    $node = node_submit($node, $context); // Prepare node for saving
+    node_save($node);
+  }
+
+  function _cambiarEstadoFlag($node, $estado, $context){
+
+    $node->field_flag['und'][0]['value'] = $estado;
+    $node = node_submit($node, $context); // Prepare node for saving
+    node_save($node);
+  }
+
+  // Estas dos funciones son para convertir el csv en un array indentado con el header del CSV
+  function _combinarArray(&$row, $key, $header) {
+  
+    $row = array_combine($header, $row);
+  }
+
+  function _obtenerCSV($csv) {
+   
+    return str_getcsv($csv, ';');
+  }
+
+  function argentinagobar_migtram_comprobacionDelContenido(){
+    // Comprobar que el contenido este completo revertida la feature or die()
+    _comprobarEstructuraContenido();
+    // Comprobar que el mapa de las listas tiene todos los contenidos or die()
+    _comprobarListas();
+  }
+
+  function htmlToMd($text){
+    $markdownify = new Markdownify();
+    return $markdownify->parseString($text);
+  }

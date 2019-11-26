@@ -1,0 +1,348 @@
+<?php
+/**
+ * @file
+ * Code for the Trámites feature.
+ */
+
+include_once 'argentinagobar_tramites.features.inc';
+include_once 'argentinagobar_tramites_validate.inc';
+
+function argentinagobar_tramites_form_tramite_node_form_alter(&$form, &$form_state, $form_id){
+ $form['options']['status']['#default_value'] = empty($form['nid']['#value']) ? 0 : $form['options']['status']['#default_value'];
+ $form['field_oficina']['#access'] = FALSE;
+ $form['field_oficina_otra']['#access'] = FALSE;
+ $form['field_transaccion_tipo']['#access'] = FALSE;
+ $form['field_digitalizacion_medir']['#access'] = FALSE;
+ $form['field_digitalizacion_observacion']['#access'] = FALSE;
+ $form['field_descargas_obligatorias']['#access'] = FALSE;
+ $form['field_formulario_digital']['#access'] = FALSE;
+ $form['field_turno_requerido']['#access'] = FALSE;
+ $form['field_turno_digital']['#access'] = FALSE;
+ $form['field_identificacion_digital']['#access'] = FALSE;
+ $form['field_posee_notificaciones']['#access'] = FALSE;
+ $form['field_notificaciones']['#access'] = FALSE;
+ $form['field_pago_requerido_list']['#access'] = FALSE;
+ $form['field_pago_electronico_list']['#access'] = FALSE;
+ $form['field_resumen_nivel']['#access'] = FALSE;
+ $form['field_relevamiento_observaciones']['#access'] = FALSE;
+ $form['field_lista_requiere_turno']['#access'] = FALSE;
+ $form['field_texto_servicio']['#access'] = FALSE;
+ $form['field_fecha_de_actualizacin']['#access'] = FALSE;
+
+//Modificar mensaje de los botones en el formulario de tramites
+ $form['og_group_ref']['und']['add_more']['#value'] = 'Añadir otro grupo';
+ $form['og_group_ref']['und'][0]['admin']['add_more']['#value'] = 'Añadir otro grupo';
+ $form['field_requisitos_collection']['und'][0]['field_requisito']['und']['add_more']['#value'] = 'Añadir otro documentación';
+ $form['field_requisitos_collection']['und'][0]['field_requisito']['und']['#title'] = 'Documentación';
+ $form['field_requisitos']['und'][0]['field_requisito']['und']['add_more']['#value'] = 'Añadir otro requisito';
+ $form['field_pasos']['und'][0]['field_paso']['und']['add_more']['#value'] = 'Añadir otro paso';
+ $form['field_costo']['und'][0]['field_valor']['und']['add_more']['#value'] = 'Añadir otro valor';
+ $form['field_vigencia']['und'][0]['field_vigencia_campos']['und']['add_more']['#value'] = 'Añadir otra cantidad';
+ $form['field_acciones']['und']['add_more']['#value'] = 'Añadir otra acción';
+ $form['field_servicios_relacionados']['und']['add_more']['#value'] = 'Añadir otro trámite';
+ $form['field_duracion']['und'][0]['field_cantidades']['und']['add_more']['#value'] = 'Añadir otra cantidad';
+
+ drupal_add_js(drupal_get_path('module', 'argentinagobar_tramites') . '/js/div.js');
+
+  global $user;
+
+	$user_fields 	= user_load($user->uid);
+	$roles 				= $user_fields->roles;
+
+	foreach ($roles as $key => $rol) {
+
+		if($rol == 'relevador servicios'){
+
+	  	drupal_add_js(drupal_get_path('module', 'argentinagobar_tramites') .'/js/parcheRelevamiento.js', array('scope' => 'footer', 'weight' => 1));
+		}
+	}
+        //echo $form_id;
+        //die();
+        if($form_id =='tramite_node_form'){
+            $form['actions']['preview']['#access'] = FALSE;
+        }
+}
+
+/**
+ * Formulario Tramite DNI, Pasaporte.
+ */
+function argentinagobar_tramites_block_info() {
+
+	$blocks = array();
+
+	$blocks['form_estado_dni'] = array(
+		'info' => t('Formulario estado Tramite DNI'),
+		'cache' => DRUPAL_NO_CACHE,
+		);
+
+	$blocks['form_estado_pas'] = array(
+		'info' => t('Formulario estado Tramite Pasaporte'),
+		'cache' => DRUPAL_NO_CACHE,
+		);
+
+	$blocks['form_vencimiento_dni'] = array(
+		'info' => t('Formulario vencimiento del DNI'),
+		'cache' => DRUPAL_NO_CACHE,
+		);
+
+	return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function argentinagobar_tramites_block_view($delta = '') {
+
+	$block = array();
+
+	switch ($delta) {
+
+		case 'form_estado_dni':
+		$block['subject'] = t('Consultá el estado del trámite de DNI');
+		$block['content'] = drupal_get_form('consulta_tramite_documento_form');
+		break;
+
+		case 'form_estado_pas':
+		$block['subject'] = t('Estado del pasaporte');
+		$block['content'] = drupal_get_form('consulta_tramite_pasaporte_form');
+		break;
+
+		case 'form_vencimiento_dni':
+		$block['subject'] = t('Vencimiento del DNI');
+		$block['content'] = drupal_get_form('consulta_vencimiento_dni_form');
+		break;
+
+	}
+	return $block;
+}
+
+/**
+ * Estado de DNI
+ */
+function consulta_tramite_documento_form($form, &$form_state) {
+
+	$form['#name']='argentinagobar_tramites';
+
+	$form['consulta'] = array(
+		'#type' => 'vertical_tabs',
+		'#description' => t('Estado del DNI actualizar'),
+	);
+
+	$form['tramite'] = array('#type' => 'hidden', '#value' => 'estadoDNI');
+
+	argentinagobar_tramites_f_dni_sexo($form);
+	argentinagobar_tramites_f_nro_boleta($form);
+
+	$form['submit']['#type'] = 'submit';
+	$form['submit']['#value'] = t('Consultar');
+
+	argentinagobar_formstyler($form, 'Elegí el tipo de consulta', TRUE);
+
+	return $form;
+}
+
+/**
+ * Estado del pasaporte
+ */
+function consulta_tramite_pasaporte_form($form, &$form_state) {
+
+	$form['#name']='argentinagobar_tramites';
+
+	$form['consulta'] = array(
+		'#type' => 'vertical_tabs',
+		'#description' => t('Estado del Pasaporte'),
+	);
+
+	$form['tramite'] = array('#type' => 'hidden', '#value' => 'estadoPAS');
+
+	argentinagobar_tramites_f_dni_sexo($form);
+	argentinagobar_tramites_f_nro_boleta($form);
+
+	$form['submit']['#type'] = 'submit';
+	$form['submit']['#value'] = t('Consultar');
+
+	argentinagobar_formstyler($form, 'Elegí el tipo de consulta', TRUE);
+
+	return $form;
+}
+
+/**
+ * Vencimiento de DNI
+ */
+function consulta_vencimiento_dni_form($form, &$form_state) {
+
+	$form['#name']='argentinagobar_tramites';
+
+	$form['consulta'] = array(
+		'#type' => 'vertical_tabs',
+		'#description' => t('Vencimiento del DNI'),
+	);
+
+	$form['tramite'] = array('#type' => 'hidden', '#value' => 'vencimientoDNI');
+
+	argentinagobar_tramites_f_dni_sexo($form);
+
+	$form['submit']['#type'] = 'submit';
+	$form['submit']['#value'] = t('Consultar');
+
+	argentinagobar_formstyler($form, 'Elegí el tipo de consulta', TRUE);
+
+	return $form;
+}
+
+function token_mininterior(){
+
+	$json = file_get_contents('https://tramitesweb.mininterior.gob.ar/rest?user=d06078f29e0c6cf2b789985695abcd52&key=AAfhTTy-.gghN456455_*uu(12ju653');
+	$data = json_decode($json);
+	variable_set('tkn_mininterior', $data->Token);
+
+}
+
+function argentinagobar_tramites_validar($form, $form_state){
+
+	if ($form_state['values']['consulta__active_tab'] == 'edit-nboleta') {
+		_validarBoleta($form_state['values']['boleta']);
+	} else {
+		_validarDNI($form_state['values']['dni']);
+		_validarSexo($form_state['values']['sexo']);
+	}
+
+}
+
+function argentinagobar_tramites_consultar($form, $form_state) {
+
+  	$form_id = str_replace('_','-',$form_state['values']['form_id']);
+	$selector = "#".$form_id." #response";
+	$response = consulta_ministerio($form_state['values']['tramite'], $form_state['values']);
+	$response['form_id']= $form_id;
+	$response['multiple'] = true;
+
+    return array(
+    	'#type' => 'ajax',
+    	'#commands' => array(array('command' => 'consultaAfter','data'=>$response, 'messages'=>form_get_errors()))
+    );
+
+}
+
+function consulta_ministerio($tipo, $values){
+
+	token_mininterior();
+
+	$dat_array['consulta']=$tipo;
+
+	$active = explode('-',$values['consulta__active_tab']);
+
+	switch($active[1]){
+
+		case 'ndni':
+		$dat_array['sexo']=($values['sexo']==0)?'F':'M';
+		$dat_array['dni']=$values['dni'];
+		break;
+
+		case 'nboleta':
+		$dat_array['boleta']=$values['boleta'];
+		break;
+	}
+
+	$data = http_build_query($dat_array);
+
+	$options = array(
+		'method' => 'POST',
+		'data' => $data,
+		'timeout' => 60,
+		'headers' => array(
+			'Content-Type' => 'application/x-www-form-urlencoded',
+			'Authorization' => 'Bearer '.variable_get('tkn_mininterior'),
+			),
+		);
+
+	$result = drupal_http_request('https://tramitesweb.mininterior.gob.ar/rest', $options);
+	$dt = json_decode($result->data);
+
+	$respArray=array();
+
+	if($dt->Error==true){
+		$respArray['icono']="fa-exclamation-circle text-warning";
+		$respArray['respuesta']=$dt->ErrorString;
+		return $respArray;
+	}
+
+	if(isset($dt->respuesta->vencimiento)){
+		$respArray['icono']="fa-calendar text-success";
+		$respArray['respuesta'] = theme('dni_pass_estado' , array(
+			'respuesta' => $dt->respuesta->vencimiento,
+			'icono' => 'calendar'
+			)
+		);
+		return $respArray;
+	}
+
+	$respArray['icono']="fa-check-circle text-success";
+	$respArray['respuesta'] = theme('dni_pass_estado' , array(
+		'respuesta' => $dt->respuesta,
+		'icono' => 'check-circle'
+		)
+	);
+	return $respArray;
+}
+
+//Agrega los fields comunes a los tramites
+
+function argentinagobar_tramites_f_dni_sexo(&$form){
+
+	// COMPROBAR MEDIANTE DNI Y SEXO
+
+	$form['ndni'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Número de DNI y Sexo'),
+		'#collapsible' => FALSE,
+		'#description' => t('<h3 style="margin-top:0;" class="padding-20 margin-20">Ingresá tus datos</h3>'),
+		'#group' => 'consulta',
+		'#attributes' => array('class' => array('tab_buttons'))
+		);
+
+	$form['ndni']['dni'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Número de DNI'),
+		'#description' => t('Número de DNI'),
+		'#group' => 'consulta',
+		'#filters' => array('trim', 'numeric')
+		//'#attributes' => array('placeholder' => 'N° de documento ej: 31084809')
+		);
+
+	$active = array(0 => t('Mujer'), 1 => t('Hombre'));
+	$form['ndni']['sexo'] = array(
+		'#type' => 'radios',
+		'#title' => t('Género'),
+		'#options' => $active,
+		'#group' => 'consulta',
+		'#theme' => array('form_element_radios_btn'),
+		'#attributes' => array('class'=>array('radioStyler'))
+		);
+
+	$form['#attributes'] = array('class' => array('search-form'));
+
+	return $form;
+}
+
+function argentinagobar_tramites_f_nro_boleta(&$form){
+
+	// COMPROBAR MEDIANTE EL NÚMERO DE BOLETA
+
+	$form['nboleta'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Número de Boleta'),
+		'#collapsible' => FALSE,
+		'#description' => t('<h3 style="margin-top:0;" class="padding-20 margin-20">Ingresá tus datos</h3>'),
+		'#group' => 'consulta'
+		);
+
+	$form['nboleta']['boleta'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Número de boleta'),
+		'#description' => t('Boleta'),
+		'#group' => 'consulta'
+		);
+
+	return $form;
+}

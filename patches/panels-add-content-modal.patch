@@ -1,0 +1,37 @@
+--- modules/contrib/panels/templates/panels-add-content-modal.tpl.php	2019-03-15 15:53:00.556749045 -0300
++++ modules/contrib/panels/templates/panels-add-content-modal.tpl.php.modificado	2019-03-15 15:53:18.520932818 -0300
+@@ -9,7 +9,33 @@
+     <div class="inside">
+       <div class="panels-categories-box">
+       <?php foreach ($categories_array as $category): ?>
+-        <?php print $category; ?>
++<?php
++$rid = 34;
++$arg = 'argentina-gob-ar';
++$drupar = 'drupar';
++$mis = 'miscellaneous';
++
++if (isset($user->roles[$rid])) {
++
++  switch($category){
++  	case(strpos($category,$arg) !== false):
++  	print ($category);
++  	break;
++
++  	case(strpos($category,$drupar) !== false):
++  	print ($category);
++  	break;
++
++  	case(strpos($category,$mis) !== false):
++  	print ($category);
++  	break;
++
++  }
++
++}else{
++  print($category);
++}
++?>
+       <?php endforeach; ?>
+       </div>
+       <?php print $root_content; ?>

@@ -1,0 +1,18 @@
+diff --git a/includes/webform.report.inc b/includes/webform.report.inc
+index dc828cb..f495d20 100644
+--- a/includes/webform.report.inc
++++ b/includes/webform.report.inc
+@@ -902,7 +902,12 @@ function _webform_export_tempname() {
+
+   // If the directory does not exist, create it.
+   file_prepare_directory($webform_export_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+-  return drupal_tempnam($webform_export_path, 'webform_');
++  if (variable_get('webform_export_path') && !is_dir(variable_get('webform_export_path'))) {
++    drupal_mkdir(variable_get('webform_export_path'), 0775, TRUE);
++    }
++
++   return variable_get('webform_export_path', 'temporary://'). 'webform_' . uniqid();
++ }
+ 
+
+ /**

@@ -1,0 +1,11 @@
+diff -ruN a/js/webform.js b/js/webform.js
+--- a/js/webform.js	2017-07-17 13:59:58.105830288 -0300
++++ b/js/webform.js	2017-07-17 13:57:13.279820000 -0300
+@@ -211,6 +211,7 @@
+               $target.toggleClass('webform-conditional-hidden', !actionResult);
+               if (actionResult) {
+                 $target.show();
++                $form.find('.chosen-disabled').prev().trigger('chosen:updated.chosen');
+               }
+               else {
+                 $target.hide();

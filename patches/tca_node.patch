@@ -1,0 +1,17 @@
+--- modules/contrib/tca/tca_node/tca_node.module	2018-02-05 10:34:20.755481051 -0300
++++ patches/tc_node.patch	2018-02-05 10:34:15.811397523 -0300
+@@ -100,9 +100,11 @@ function tca_node_node_view($node, $view
+ function tca_node_ctools_render_alter($info, $page, $context) {
+   if ($page) {
+     if (isset($context['handler']) && $context['handler']->task == 'node_view') {
+-      $node = $context['contexts'][$context['handler']->conf['context']]->data;
+-      if (node_is_page($node) && !user_access('bypass tca_node')) {
+-        tca_execute('node', $node);
++      if(isset($context['handler']->conf['context'])){
++        $node = $context['contexts'][$context['handler']->conf['context']]->data;
++        if (node_is_page($node) && !user_access('bypass tca_node')) {
++          tca_execute('node', $node);
++        }
+       }
+     }
+   }

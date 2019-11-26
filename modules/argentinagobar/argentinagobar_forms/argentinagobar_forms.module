@@ -1,0 +1,8 @@
+<?php
+
+require_once drupal_get_path('module','argentinagobar_forms').'/argentinagobar_forms.entities.inc';
+require_once drupal_get_path('module','argentinagobar_forms').'/argentinagobar_forms.admin.inc';
+require_once drupal_get_path('module','argentinagobar_forms').'/argentinagobar_forms.menu.inc';
+require_once drupal_get_path('module','argentinagobar_forms').'/argentinagobar_forms.block_functions.inc';
+require_once drupal_get_path('module','argentinagobar_forms').'/argentinagobar_forms.render_fields.inc';
+require_once drupal_get_path('module','argentinagobar_forms').'/argentinagobar_forms.form.inc';

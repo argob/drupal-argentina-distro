@@ -1,0 +1,9 @@
+name = Argentina Forms
+description = Permite generar formularios dinámicos con validaciones del lado del cliente y del servidor.
+core = 7.x
+package = Argentina
+
+files[] = argentinagobar_forms.module
+dependencies[] = entity
+dependencies[] = ctools
+dependencies[] = entityreference

@@ -1,0 +1,24 @@
+--- /var/www/html/argentina/profiles/argentinagobar/modules/contrib/markdown_insert/markdown_insert.js	2014-07-14 21:17:54.000000000 -0300
++++ markdown_insert.js	2017-03-02 14:37:03.000000000 -0300
+@@ -27,16 +27,14 @@
+       case 'image_image':
+ 
+         // Attributes that are needed for the new markdown image output.
+-        var src = $(options.content).attr('src') || "";
+-        var alt = options.fields.alt || "";
++		var pathBase  =  Drupal.settings.basePath;
++		var path = "sites/default/files/";
++        var filename = options.filename || "";
++		var alt = options.fields.alt || "";
+         var title = options.fields.title? ' "' + options.fields.title + '"' : "";
+-        var link = options.fields.link || false;
+-
+-        // Markdown image format is ![Alt Text](/path/to/file "Optional Title").
+-        var image = "![" + alt + "](" + src + title + ")";
+ 
+         // Markdown line format is [Link Content](/link/href "Optional Title").
+-        options.content = link? "[" + image + "](" + link + title + ")" : image;
++        options.content = "![" + alt + "](" + pathBase +  path + filename + " "+ title + ")";
+ 
+        break;
+     }
