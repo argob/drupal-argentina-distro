@@ -252,7 +252,7 @@ projects[user_prune][patch][] = patches/user_prune.module.patch
 
 projects[poncho][type] = theme
 projects[poncho][download][type] = git
-projects[poncho][download][url] = "git@github.com:argob/poncheado.git"
+projects[poncho][download][url] = "git@github.com:argob/poncho.git"
 projects[poncho][download][branch] = master
 projects[poncho][subdir] = contrib
 
