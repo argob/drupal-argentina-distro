@@ -252,43 +252,43 @@ projects[user_prune][patch][] = patches/user_prune.module.patch
 
 projects[poncho][type] = theme
 projects[poncho][download][type] = git
-projects[poncho][download][url] = "git@github.com:argob/poncho.git"
+projects[poncho][download][url] = "https://github.com/argob/poncho.git"
 projects[poncho][download][branch] = master
 projects[poncho][subdir] = contrib
 
 projects[drupar_borrador][type] = module
 projects[drupar_borrador][download][type] = git
-projects[drupar_borrador][download][url] = "git@github.com:argob/drupal-argentina-borrador.git"
-projects[drupar_borrador][download][tag] = master
+projects[drupar_borrador][download][url] = "https://github.com/argob/drupal-argentina-borrador.git"
+projects[drupar_borrador][download][branch] = master
 projects[drupar_borrador][subdir] = contrib
 
 projects[drupar_filtros][type] = module
 projects[drupar_filtros][download][type] = git
-projects[drupar_filtros][download][url] = "git@github.com:argob/drupal-argentina-filtros.git"
-projects[drupar_filtros][download][tag] = master
+projects[drupar_filtros][download][url] = "https://github.com/argob/drupal-argentina-filtros.git"
+projects[drupar_filtros][download][branch] = master
 projects[drupar_filtros][subdir] = contrib
 
 projects[drupar_helpers][type] = module
 projects[drupar_helpers][download][type] = git
-projects[drupar_helpers][download][url] = "git@github.com:argob/drupal-argentina-helpers.git"
+projects[drupar_helpers][download][url] = "https://github.com/argob/drupal-argentina-helpers.git"
 projects[drupar_helpers][download][branch] = master
 projects[drupar_helpers][subdir] = contrib
 
 projects[drupar_jumbotron][type] = module
 projects[drupar_jumbotron][download][type] = git
-projects[drupar_jumbotron][download][url] = "git@github.com:argob/drupal-argentina-jumbotron.git"
-projects[drupar_jumbotron][download][tag] = master
+projects[drupar_jumbotron][download][url] = "https://github.com/argob/drupal-argentina-jumbotron.git"
+projects[drupar_jumbotron][download][branch] = master
 projects[drupar_jumbotron][subdir] = contrib
 
 projects[drupar_mapa][type] = module
 projects[drupar_mapa][download][type] = git
-projects[drupar_mapa][download][url] = "git@github.com:argob/drupal-argentina-mapa.git"
-projects[drupar_mapa][download][tag] = master
+projects[drupar_mapa][download][url] = "https://github.com/argob/drupal-argentina-mapa.git"
+projects[drupar_mapa][download][branch] = master
 projects[drupar_mapa][subdir] = contrib
 
 projects[drupar_carousel][type] = module
 projects[drupar_carousel][download][type] = git
-projects[drupar_carousel][download][url] = "git@github.com:argob/drupal-argentina-carousel.git"
+projects[drupar_carousel][download][url] = "https://github.com/argob/drupal-argentina-carousel.git"
 projects[drupar_carousel][download][branch] = master
 projects[drupar_carousel][subdir] = contrib
 

@@ -6,7 +6,6 @@ dependencies[] = admin_views
 dependencies[] = argentinagobar_cck
 dependencies[] = argentinagobar_configuracion
 dependencies[] = book
-dependencies[] = calendario_vuce
 dependencies[] = ctools
 dependencies[] = entityreference
 dependencies[] = features

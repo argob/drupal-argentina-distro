@@ -3,7 +3,6 @@ core = 7.x
 package = Argentina
 version = 7.x-1.0
 dependencies[] = argentinagobar_cck
-dependencies[] = calendario_vuce
 dependencies[] = date
 dependencies[] = field_collection
 dependencies[] = field_group
