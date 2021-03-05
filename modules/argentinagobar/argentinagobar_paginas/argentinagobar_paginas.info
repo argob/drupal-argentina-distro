@@ -4,7 +4,6 @@ package = Argentina
 version = 7.x-1.0
 dependencies[] = argentinagobar_cck
 dependencies[] = argentinagobar_configuracion
-dependencies[] = calendario_vuce
 dependencies[] = ctools
 dependencies[] = entityreference
 dependencies[] = features

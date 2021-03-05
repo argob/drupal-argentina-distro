@@ -56,7 +56,8 @@ function enable_pages(){
   foreach ($pages as $item) {
     $page = page_manager_get_page_cache($item);
     $function = ctools_plugin_get_function($page->subtask, "enable callback"); 
-    $function($page, FALSE); 
+    if (is_string($function))
+      $function($page, FALSE); 
     menu_rebuild();
   }
 }
