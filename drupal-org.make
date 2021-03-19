@@ -306,7 +306,7 @@ libraries[chosen][directory_name] = "chosen"
 libraries[chosen][type] = "library"
 
 libraries[jquery.imgareaselect][download][type] = "file"
-libraries[jquery.imgareaselect][download][url] = "http://odyniec.net/projects/imgareaselect/jquery.imgareaselect-0.9.10.zip"
+libraries[jquery.imgareaselect][download][url] = "https://github.com/odyniec/imgareaselect/archive/v0.9.11-rc.1.zip"
 libraries[jquery.imgareaselect][directory_name] = "jquery.imgareaselect"
 libraries[jquery.imgareaselect][type] = "library"
 
